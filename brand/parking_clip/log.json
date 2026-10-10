@@ -1,0 +1,4028 @@
+{
+ "day": "2012-10-16",
+ "frames": [
+  50,
+  64
+ ],
+ "front_row": [
+  88,
+  89,
+  90,
+  91,
+  92,
+  93,
+  94,
+  95,
+  96,
+  97,
+  98,
+  99
+ ],
+ "agree": 180,
+ "total": 180,
+ "fired": {
+  "88": 33,
+  "95": 33,
+  "96": 33,
+  "98": 33,
+  "92": 58
+ },
+ "spec": {
+  "kind": "state",
+  "min_duration_s": 15,
+  "trigger": "rising"
+ },
+ "threshold": 0.42500000000000004,
+ "log": [
+  {
+   "frame": 30,
+   "file": "PUCPR_2012-10-16_08_53_27.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.735,
+     "open": true,
+     "votes": 1,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.021,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.01,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.003,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.991,
+     "open": true,
+     "votes": 1,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.998,
+     "open": true,
+     "votes": 1,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.999,
+     "open": true,
+     "votes": 1,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "98": {
+     "p": 0.998,
+     "open": true,
+     "votes": 1,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.026,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 31,
+   "file": "PUCPR_2012-10-16_08_58_28.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.713,
+     "open": true,
+     "votes": 2,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.017,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.053,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.011,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.005,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.998,
+     "open": true,
+     "votes": 2,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.998,
+     "open": true,
+     "votes": 2,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.999,
+     "open": true,
+     "votes": 2,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "98": {
+     "p": 0.987,
+     "open": true,
+     "votes": 2,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.037,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 32,
+   "file": "PUCPR_2012-10-16_09_03_28.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.639,
+     "open": true,
+     "votes": 3,
+     "cond": true,
+     "phase": "pending",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.017,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.037,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.004,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.996,
+     "open": true,
+     "votes": 3,
+     "cond": true,
+     "phase": "pending",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.987,
+     "open": true,
+     "votes": 3,
+     "cond": true,
+     "phase": "pending",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.022,
+     "open": false,
+     "votes": 2,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.998,
+     "open": true,
+     "votes": 3,
+     "cond": true,
+     "phase": "pending",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.049,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 33,
+   "file": "PUCPR_2012-10-16_09_08_28.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.615,
+     "open": true,
+     "votes": 4,
+     "cond": true,
+     "phase": "active",
+     "fired": true,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.014,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.033,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.029,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.015,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.005,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.996,
+     "open": true,
+     "votes": 4,
+     "cond": true,
+     "phase": "active",
+     "fired": true,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.965,
+     "open": true,
+     "votes": 4,
+     "cond": true,
+     "phase": "active",
+     "fired": true,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.008,
+     "open": false,
+     "votes": 2,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.997,
+     "open": true,
+     "votes": 4,
+     "cond": true,
+     "phase": "active",
+     "fired": true,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.037,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 34,
+   "file": "PUCPR_2012-10-16_09_13_29.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.788,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.027,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.086,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.021,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.01,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.986,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.006,
+     "open": false,
+     "votes": 2,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.032,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 35,
+   "file": "PUCPR_2012-10-16_09_18_29.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.677,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.01,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.032,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.028,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.987,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.008,
+     "open": false,
+     "votes": 1,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.047,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 36,
+   "file": "PUCPR_2012-10-16_09_23_29.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.501,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.031,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.028,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.017,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.021,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.987,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.99,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.032,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.999,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.011,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 37,
+   "file": "PUCPR_2012-10-16_09_28_29.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.606,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.011,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.05,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.015,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.004,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.981,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.015,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.999,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.041,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 38,
+   "file": "PUCPR_2012-10-16_09_33_29.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.73,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.032,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.015,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.004,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.991,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.919,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.018,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.999,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.025,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 39,
+   "file": "PUCPR_2012-10-16_09_38_30.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.711,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.017,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.039,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.029,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.987,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.035,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.999,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.027,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 40,
+   "file": "PUCPR_2012-10-16_09_43_30.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.698,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.016,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.045,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.015,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.995,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.023,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.995,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.027,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 41,
+   "file": "PUCPR_2012-10-16_09_48_30.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.752,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.022,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.055,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.016,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.995,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.992,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.01,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.039,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 42,
+   "file": "PUCPR_2012-10-16_09_53_31.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.773,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.058,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.014,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.994,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.992,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.033,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 43,
+   "file": "PUCPR_2012-10-16_09_58_31.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.852,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.017,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.053,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.026,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.025,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.01,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.004,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.994,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.024,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 44,
+   "file": "PUCPR_2012-10-16_10_03_31.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.868,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.015,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.032,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.022,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.005,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.026,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 45,
+   "file": "PUCPR_2012-10-16_10_08_31.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.824,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.046,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.028,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.999,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.018,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.993,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.016,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 46,
+   "file": "PUCPR_2012-10-16_10_13_32.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.86,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.053,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.017,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.014,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.01,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.999,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.015,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.995,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.035,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 47,
+   "file": "PUCPR_2012-10-16_10_18_32.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.721,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.044,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.029,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.015,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.999,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.025,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 48,
+   "file": "PUCPR_2012-10-16_10_23_32.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.8,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.017,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.058,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.02,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.01,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.994,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.021,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.021,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 49,
+   "file": "PUCPR_2012-10-16_10_28_33.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.807,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.011,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.046,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.028,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.017,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.005,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.999,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.01,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 50,
+   "file": "PUCPR_2012-10-16_10_33_33.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.666,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.051,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.022,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.017,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.01,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.999,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.999,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.02,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 51,
+   "file": "PUCPR_2012-10-16_10_38_33.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.729,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.029,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.017,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.023,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.011,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.011,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.995,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 52,
+   "file": "PUCPR_2012-10-16_10_43_33.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.703,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.056,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.02,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.009,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.995,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 53,
+   "file": "PUCPR_2012-10-16_10_48_34.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.792,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.016,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.055,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.018,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.011,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.991,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.978,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.026,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 54,
+   "file": "PUCPR_2012-10-16_10_53_34.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.741,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.065,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.024,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.016,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "93": {
+     "p": 0.016,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.995,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.967,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.014,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.011,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 55,
+   "file": "PUCPR_2012-10-16_10_58_34.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.739,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.011,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.063,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.054,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.901,
+     "open": true,
+     "votes": 1,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "93": {
+     "p": 0.019,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.005,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.992,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.985,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.023,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 56,
+   "file": "PUCPR_2012-10-16_11_03_34.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.623,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.02,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.087,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.051,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.889,
+     "open": true,
+     "votes": 2,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": true
+    },
+    "93": {
+     "p": 0.01,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.982,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.994,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.025,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 57,
+   "file": "PUCPR_2012-10-16_11_08_34.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.791,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.081,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.045,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.821,
+     "open": true,
+     "votes": 3,
+     "cond": true,
+     "phase": "pending",
+     "fired": false,
+     "truth_open": true
+    },
+    "93": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.988,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.033,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 58,
+   "file": "PUCPR_2012-10-16_11_13_35.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.765,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.057,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.105,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.842,
+     "open": true,
+     "votes": 4,
+     "cond": true,
+     "phase": "active",
+     "fired": true,
+     "truth_open": true
+    },
+    "93": {
+     "p": 0.01,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.005,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.99,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.978,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.004,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.022,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 59,
+   "file": "PUCPR_2012-10-16_11_18_35.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.546,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.004,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.057,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.046,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.887,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "93": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.995,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.995,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.004,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.991,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.018,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 60,
+   "file": "PUCPR_2012-10-16_11_23_35.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.655,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.073,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.07,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.785,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "93": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.997,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.98,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.005,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.977,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.023,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 61,
+   "file": "PUCPR_2012-10-16_11_28_36.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.68,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.059,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.057,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.597,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "93": {
+     "p": 0.014,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.971,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.918,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.017,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.998,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 62,
+   "file": "PUCPR_2012-10-16_11_33_36.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.512,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.004,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.036,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.023,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.865,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "93": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.007,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.985,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.996,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 63,
+   "file": "PUCPR_2012-10-16_11_38_36.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.636,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.003,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.038,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.041,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.801,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "93": {
+     "p": 0.004,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.987,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.994,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.981,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.012,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  },
+  {
+   "frame": 64,
+   "file": "PUCPR_2012-10-16_11_43_37.jpg",
+   "spaces": {
+    "88": {
+     "p": 0.671,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "89": {
+     "p": 0.003,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "90": {
+     "p": 0.044,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "91": {
+     "p": 0.028,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "92": {
+     "p": 0.8,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "93": {
+     "p": 0.008,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "94": {
+     "p": 0.006,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "95": {
+     "p": 0.993,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "96": {
+     "p": 0.99,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "97": {
+     "p": 0.003,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    },
+    "98": {
+     "p": 0.993,
+     "open": true,
+     "votes": 5,
+     "cond": true,
+     "phase": "active",
+     "fired": false,
+     "truth_open": true
+    },
+    "99": {
+     "p": 0.013,
+     "open": false,
+     "votes": 0,
+     "cond": false,
+     "phase": "idle",
+     "fired": false,
+     "truth_open": false
+    }
+   }
+  }
+ ]
+}

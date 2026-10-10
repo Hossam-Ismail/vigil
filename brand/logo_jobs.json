@@ -1,0 +1,6 @@
+[
+ {"name": "logo_a.png", "prompt": "Minimal geometric logo mark for 'Vigil', an AI that watches security cameras for you. A single bold, rounded almond eye shape whose pupil is a small solid circle, drawn with one continuous thick stroke, flat vector, lime green #C8F560 on a transparent background. No text, no gradients, no shadows, centered, generous padding, works as a tiny app icon."},
+ {"name": "logo_b.png", "prompt": "Flat vector app-icon logo mark for a camera-AI startup called Vigil: a stylized letter V whose inner notch forms an eye with a round pupil, thick uniform strokes, lime green #C8F560, transparent background, no text, no gradient, centered, simple enough to read at 16 pixels."},
+ {"name": "logo_c.png", "prompt": "Minimal logo mark: a camera lens aperture made of three overlapping rounded arcs that together read as a watchful eye, flat vector, solid lime green #C8F560 shapes on a transparent background, no text, no gradient, centered, bold and simple, Swiss design."},
+ {"name": "logo_d.png", "prompt": "App icon for 'Vigil': rounded-square near-black tile (#0D0F11) with a bold lime green (#C8F560) almond eye outline and solid round pupil in the center, a tiny spark of light on the pupil, flat vector, crisp edges, no text, no gradient background, iOS app icon style.", "background": "opaque"}
+]

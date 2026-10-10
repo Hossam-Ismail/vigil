@@ -1,0 +1,338 @@
+{
+ "doorstep": [
+  {
+   "label": "a cardboard box",
+   "score": 0.64,
+   "pct": [
+    41.7,
+    68.6,
+    18.5,
+    21.7
+   ]
+  },
+  {
+   "label": "a cardboard box",
+   "score": 0.11,
+   "pct": [
+    42.9,
+    68.5,
+    16.8,
+    9.0
+   ]
+  }
+ ],
+ "garage": [
+  {
+   "label": "an open garage door",
+   "score": 0.2,
+   "pct": [
+    67.6,
+    17.5,
+    6.5,
+    11.3
+   ]
+  },
+  {
+   "label": "an open garage door",
+   "score": 0.19,
+   "pct": [
+    16.9,
+    15.3,
+    2.2,
+    3.1
+   ]
+  },
+  {
+   "label": "an open garage door",
+   "score": 0.16,
+   "pct": [
+    68.7,
+    0.7,
+    30.8,
+    98.6
+   ]
+  },
+  {
+   "label": "an open garage door",
+   "score": 0.14,
+   "pct": [
+    34.1,
+    13.0,
+    14.8,
+    18.3
+   ]
+  }
+ ],
+ "dock": [
+  {
+   "label": "an open loading dock door with a truck trailer",
+   "score": 0.16,
+   "pct": [
+    67.9,
+    11.0,
+    26.1,
+    36.9
+   ]
+  },
+  {
+   "label": "an open loading dock door with a truck trailer",
+   "score": 0.15,
+   "pct": [
+    23.1,
+    0.0,
+    76.9,
+    100.0
+   ]
+  },
+  {
+   "label": "an open loading dock door with a truck trailer",
+   "score": 0.14,
+   "pct": [
+    12.1,
+    7.6,
+    23.4,
+    39.1
+   ]
+  },
+  {
+   "label": "an open loading dock door with a truck trailer",
+   "score": 0.13,
+   "pct": [
+    42.9,
+    15.5,
+    8.2,
+    31.8
+   ]
+  },
+  {
+   "label": "an open loading dock door with a truck trailer",
+   "score": 0.13,
+   "pct": [
+    51.1,
+    14.6,
+    9.6,
+    32.4
+   ]
+  }
+ ],
+ "staging": [
+  {
+   "label": "an empty floor area marked with yellow tape",
+   "score": 0.56,
+   "pct": [
+    46.8,
+    39.1,
+    43.2,
+    53.3
+   ]
+  },
+  {
+   "label": "an empty floor area marked with yellow tape",
+   "score": 0.53,
+   "pct": [
+    64.2,
+    39.9,
+    28.9,
+    9.7
+   ]
+  },
+  {
+   "label": "an empty floor area marked with yellow tape",
+   "score": 0.52,
+   "pct": [
+    51.4,
+    86.1,
+    22.8,
+    13.3
+   ]
+  },
+  {
+   "label": "an empty floor area marked with yellow tape",
+   "score": 0.48,
+   "pct": [
+    89.0,
+    52.1,
+    5.0,
+    46.2
+   ]
+  }
+ ],
+ "fireexit": [
+  {
+   "label": "a shrink-wrapped pallet",
+   "score": 0.36,
+   "pct": [
+    90.0,
+    88.6,
+    5.5,
+    7.8
+   ]
+  },
+  {
+   "label": "a shrink-wrapped pallet",
+   "score": 0.3,
+   "pct": [
+    94.8,
+    89.7,
+    2.6,
+    7.3
+   ]
+  },
+  {
+   "label": "a shrink-wrapped pallet",
+   "score": 0.29,
+   "pct": [
+    87.4,
+    0.1,
+    11.8,
+    17.8
+   ]
+  },
+  {
+   "label": "a shrink-wrapped pallet",
+   "score": 0.29,
+   "pct": [
+    23.7,
+    0.1,
+    15.3,
+    17.3
+   ]
+  },
+  {
+   "label": "a shrink-wrapped pallet",
+   "score": 0.28,
+   "pct": [
+    87.3,
+    18.0,
+    11.8,
+    28.2
+   ]
+  }
+ ],
+ "checkout": [
+  {
+   "label": "person",
+   "score": 0.92,
+   "pct": [
+    51.6,
+    40.5,
+    10.6,
+    42.1
+   ]
+  },
+  {
+   "label": "person",
+   "score": 0.91,
+   "pct": [
+    41.3,
+    54.3,
+    13.8,
+    45.5
+   ]
+  },
+  {
+   "label": "person",
+   "score": 0.86,
+   "pct": [
+    49.4,
+    33.9,
+    7.0,
+    26.3
+   ]
+  },
+  {
+   "label": "person",
+   "score": 0.8,
+   "pct": [
+    53.6,
+    22.5,
+    6.0,
+    18.3
+   ]
+  },
+  {
+   "label": "person",
+   "score": 0.79,
+   "pct": [
+    63.6,
+    23.5,
+    6.4,
+    12.8
+   ]
+  },
+  {
+   "label": "person",
+   "score": 0.73,
+   "pct": [
+    48.0,
+    26.6,
+    5.6,
+    18.5
+   ]
+  }
+ ],
+ "reception": [
+  {
+   "label": "person",
+   "score": 0.93,
+   "pct": [
+    56.4,
+    21.3,
+    9.7,
+    35.8
+   ]
+  },
+  {
+   "label": "person",
+   "score": 0.91,
+   "pct": [
+    69.8,
+    13.8,
+    9.6,
+    38.5
+   ]
+  },
+  {
+   "label": "person",
+   "score": 0.9,
+   "pct": [
+    38.3,
+    37.5,
+    9.4,
+    40.0
+   ]
+  },
+  {
+   "label": "person",
+   "score": 0.89,
+   "pct": [
+    26.5,
+    41.0,
+    12.3,
+    44.7
+   ]
+  },
+  {
+   "label": "person",
+   "score": 0.71,
+   "pct": [
+    76.8,
+    6.5,
+    4.8,
+    13.2
+   ]
+  }
+ ],
+ "servicebay": [
+  {
+   "label": "car",
+   "score": 0.93,
+   "pct": [
+    50.6,
+    13.5,
+    13.5,
+    16.9
+   ]
+  }
+ ]
+}

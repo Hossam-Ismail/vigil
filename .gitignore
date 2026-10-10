@@ -1,0 +1,24 @@
+# runtime data: database, recordings, training samples, models
+data/
+
+# python
+backend/.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+
+# web
+web/node_modules/
+web/dist/
+web/*.tsbuildinfo
+web/node_modules/.tmp/
+
+.DS_Store
+.env
+.env.*
+imessage-bridge/node_modules/
+
+# render intermediates and raw downloaded footage (re-creatable with backend/scripts)
+brand/**/seq/
+brand/pexels/
+brand/cover/

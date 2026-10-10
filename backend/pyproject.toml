@@ -1,0 +1,45 @@
+[project]
+name = "vigil"
+version = "0.1.0"
+description = "Describe what to watch for in plain language; Vigil builds a vision model for it and runs it on your cameras."
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.4",
+    "torchvision",
+    "transformers>=4.56",
+    "accelerate",
+    "rfdetr>=1.9",
+    "pillow",
+    "numpy",
+    "scipy",
+    "scikit-learn",
+    "opencv-python-headless",
+    "av>=12",
+    "fastapi>=0.115",
+    "uvicorn[standard]",
+    "python-multipart",
+    "pydantic>=2.7",
+    "httpx",
+    "anthropic>=1.0",
+    "datasets>=3",
+    "huggingface_hub",
+]
+
+[project.optional-dependencies]
+# Fully local vision-language model on Apple Silicon (no API key needed).
+local = ["mlx-vlm>=0.3"]
+dev = ["pytest", "pytest-timeout"]
+
+[project.scripts]
+vigil = "vigil.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["vigil*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+timeout = 600

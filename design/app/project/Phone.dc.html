@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vigil · iMessage alert</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#C8F560}a:hover{color:#E2FF9A}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #000; color: #F2F2F7; font-family: 'Geist', system-ui, sans-serif; font-size: 16px; line-height: 1.38; display: flex; flex-direction: column">
+
+<header style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 22px 16px 12px; border-bottom: 1px solid #1C1C1E">
+<img src="/_blob/1702ca43b92db30bd2f8a972add6ec8d" alt="" style="width: 52px; height: 52px; border-radius: 999px">
+<p style="margin: 0; font-size: 13px; color: #F2F2F7">Vigil</p>
+</header>
+
+<div style="flex: 1; overflow: hidden; padding: 14px 14px 8px; display: flex; flex-direction: column; gap: 6px">
+<p style="margin: 0 0 6px; align-self: center; font-size: 12px; color: #8E8E93">iMessage · Today 2:14 PM</p>
+<img src="/_blob/84be5f2fac1114ef0af82e13b80c02a4" alt="Porch snapshot: a cardboard package on the doormat" style="align-self: flex-start; width: 250px; height: 168px; object-fit: cover; border-radius: 18px">
+<p style="margin: 0; align-self: flex-start; max-width: 280px; background: #26252A; border-radius: 18px; padding: 9px 13px">A package was left on the doorstep (Front porch, 2:14 PM)<br>A brown box is on the doormat by the door.<br><br>Was this right? Reply YES or NO and Vigil will learn from it.</p>
+<p style="margin: 6px 0 0; align-self: flex-end; background: #0A84FF; color: #FFFFFF; border-radius: 18px; padding: 9px 14px">Yes</p>
+<p style="margin: 0; align-self: flex-end; font-size: 11px; color: #8E8E93">Delivered</p>
+<p style="margin: 6px 0 0; align-self: flex-start; max-width: 280px; background: #26252A; border-radius: 18px; padding: 9px 13px">Thanks! Marked as right. “Package on the doorstep” just learned from it.</p>
+<p style="margin: 14px 0 6px; align-self: center; font-size: 12px; color: #8E8E93">Today 6:02 PM</p>
+<p style="margin: 0; align-self: flex-start; max-width: 280px; background: #26252A; border-radius: 18px; padding: 9px 13px">A package was left on the doorstep (Front porch, 6:02 PM)<br><br>Was this right? Reply YES or NO and Vigil will learn from it.</p>
+<p style="margin: 6px 0 0; align-self: flex-end; background: #0A84FF; color: #FFFFFF; border-radius: 18px; padding: 9px 14px">No, that's the recycling bin</p>
+<p style="margin: 6px 0 0; align-self: flex-start; max-width: 280px; background: #26252A; border-radius: 18px; padding: 9px 13px">Got it, false alarm. “Package on the doorstep” just learned from it and will be more careful.</p>
+</div>
+
+<form style="display: flex; align-items: center; gap: 8px; padding: 8px 12px 26px">
+<label for="reply" style="position: absolute; width: 1px; height: 1px; overflow: hidden">Reply</label>
+<input id="reply" type="text" placeholder="iMessage" style="flex: 1; min-height: 40px; box-sizing: border-box; background: #000; color: #F2F2F7; border: 1px solid #3A3A3C; border-radius: 999px; padding: 0 16px; font: inherit; font-size: 16px">
+<button type="button" aria-label="Send" style="width: 40px; height: 40px; border-radius: 999px; background: #0A84FF; border: 0; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+</form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

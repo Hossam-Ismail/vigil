@@ -1,0 +1,55 @@
+{
+  "v": 4,
+  "attachments": {},
+  "createdOnFiles": {
+    "at": "2026-10-10T13:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "faces": {
+    "geist": {
+      "family": "Geist",
+      "href": "https://fonts.googleapis.com/css2?family=Geist:wght@400..700&display=swap"
+    },
+    "geist-mono": {
+      "family": "Geist Mono",
+      "href": "https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap"
+    }
+  },
+  "lists": "css",
+  "order": [
+    "cover",
+    "how",
+    "usecases",
+    "photon",
+    "acts",
+    "safety",
+    "parking",
+    "why",
+    "start",
+    "cta"
+  ],
+  "sections": {
+    "s1": {
+      "description": "The promise and the problem it solves",
+      "start": "cover"
+    },
+    "s2": {
+      "description": "How Vigil works: a model per request that acts and self-improves",
+      "start": "how"
+    },
+    "s3": {
+      "description": "Use cases, and the iMessage loop built on Photon",
+      "start": "usecases"
+    },
+    "s4": {
+      "description": "Real-footage spotlights: what arrives, and how accurate it is",
+      "start": "acts"
+    },
+    "s5": {
+      "description": "Why Vigil and how to get started",
+      "start": "why"
+    }
+  },
+  "title": "Vigil — marketing deck"
+}

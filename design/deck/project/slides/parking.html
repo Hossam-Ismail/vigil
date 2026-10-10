@@ -1,0 +1,22 @@
+<section id="parking" data-transition="fade" style="background:#F2F3EE;color:#15181B;font-family:'Geist', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-family:'Geist Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#4F7D00">Spotlight · Parking</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.08;letter-spacing:-2px;color:#15181B">Know the moment a spot opens</h2>
+</div>
+<div style="display:grid;grid-template-columns:920px 680px;gap:64px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:16px">
+<img src="/_blob/40bf984ddeca059035afb874a99c5acf" data-video="/_blob/8c306aa8e31b8f554104c031d8677fa4" alt="Real video of a busy two-part parking lot from above: Vigil outlines all 161 spaces; as cars pull out, their spaces turn amber while Vigil checks, then green with Spot opened, texted you" style="width:920px;height:390px;object-fit:cover;border-radius:16px;border:1px solid #DCDED6">
+<p style="font-size:24px;color:#4E5560">Real video, 2× speed. The model never saw this lot.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:24px">
+<p style="font-size:28px;line-height:1.4;color:#15181B;background:#FBFBF8;border:1px solid #C9D7A6;border-radius:14px;padding:20px 24px">“Text me when a spot opens up.”</p>
+<p style="font-size:28px;line-height:1.45;color:#15181B">In this video: <b>161 spaces watched, 10 texts sent, 9 of them right.</b> <span style="color:#4E5560">The miss: a white van's roof read as an empty bay.</span></p>
+<p style="font-size:120px;font-weight:700;line-height:1;letter-spacing:-4px;color:#4F7D00">99.4%</p>
+<p style="font-size:28px;line-height:1.45;color:#4E5560">of 4,000 spaces called right on a second public camera set, on days the model had never seen</p>
+<p style="font-size:26px;line-height:1.45;color:#4E5560"><span style="color:#15181B">Then:</span> iMessage, or update the “spaces free” sign through a webhook.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'Geist Mono', 'Courier New', monospace;font-size:24px;color:#6C727C">Vigil · video: Pexels · accuracy: PKLot (CC BY 4.0)</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'Geist Mono', 'Courier New', monospace;font-size:24px;color:#6C727C">07</p>
+<aside>The number: measured on PKLot, a public set of real parking-lot cameras where every space in every frame is labeled. We trained Vigil's model on one camera's labeled days and scored it on 4,000 spaces from days it never saw: 99.4% correct (99.0% after 256 labeled examples); 98.1% on each of PKLot's other two cameras. The video: Pexels clip 33610407, "High-angle aerial shot of a busy parking lot" (Pexels License, free to use), real continuous footage, stabilized to its first frame and played at 2x. The model watching it was trained only on PKLot, never on this lot or this video. The watch is the plain request "Text me when a spot opens up", applied to every space in both lots, no zone: 161 spaces. 147 are spots where Vigil's own detector sees a car parked at some point in the clip; 14 are empty bays found from the painted lines (gaps in each row, the caravan bays, the angled top-left row), so spaces that start empty are watched too. Each space runs Vigil's real state-watch runtime, checked once a second like the live product, already running when the clip starts. Thin white boxes are spaces the model calls taken, green ones are open. An opening must win 3 of 5 votes (amber, "checking") and hold for 2 seconds ("holding") before the text goes out. Counts, checked frame by frame: 10 cars leave a watched space. 9 of them get a text. The 10th spot was taken by another car within 3 seconds, before the 2-second hold finished, so no text, by design. 1 false alert: a parked white van in a caravan bay, whose roof the model read as empty pavement; replying NO to that text is what teaches the watch. 10 texts sent in total, 9 right. Nothing is hand-drawn.</aside>
+</section>

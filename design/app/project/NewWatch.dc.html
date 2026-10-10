@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vigil · New watch</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#2A2D30}
+a{color:#C8F560}a:hover{color:#DDFF8A}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #2A2D30; color: #F2F2F0; font-family: 'Chakra Petch', sans-serif; font-size: 15px; line-height: 1.45; display: flex; flex-direction: column">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; padding: 14px 28px; border-bottom: 1px solid rgba(255,255,255,0.12); font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.18em">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; color: #F2F2F0; text-decoration: none">
+<svg aria-hidden="true" width="34" height="34" viewBox="0 0 64 64" fill="none" stroke-linecap="square" style="flex: none"><path d="M4 17V4h13M47 4h13v13M60 47v13H47M17 60H4V47" stroke="#C8F560" stroke-width="3"/><path d="M15 21l11 5 6 5 6-5 11-5" stroke="#E6EBE8" stroke-width="2.5"/><circle cx="25" cy="35" r="6.5" stroke="#E6EBE8" stroke-width="2.5"/><circle cx="39" cy="35" r="6.5" stroke="#E6EBE8" stroke-width="2.5"/><rect x="23" y="33" width="4" height="4" fill="#C8F560" stroke="none"/><rect x="37" y="33" width="4" height="4" fill="#C8F560" stroke="none"/><path d="M29.5 44l2.5 4 2.5-4" stroke="#E6EBE8" stroke-width="2.5"/></svg>
+<span style="font-family: 'Chakra Petch', sans-serif; font-size: 18px; font-weight: 600; letter-spacing: 0.3em">VIGIL</span>
+</a>
+<nav aria-label="Main" style="display: flex; flex-wrap: wrap; gap: 4px">
+<a href="Main.dc.html" style="padding: 10px 12px; color: #A3A9AE; text-decoration: none">LIVE</a>
+<a href="Watch.dc.html" style="padding: 10px 12px; color: #A3A9AE; text-decoration: none">WATCHES</a>
+<a href="Inbox.dc.html" style="padding: 10px 12px; color: #A3A9AE; text-decoration: none">INBOX <span style="color: #C8F560">2</span></a>
+<a href="Integrations.dc.html" style="padding: 10px 12px; color: #A3A9AE; text-decoration: none">LINKS</a>
+</nav>
+<span style="margin-left: auto; color: #A3A9AE"><span style="color: #C8F560">●</span> ONLINE · 14:14:07</span>
+<a href="NewWatch.dc.html" style="padding: 10px 14px; color: #1E2124; background: #C8F560; border: 1px solid #C8F560; text-decoration: none">+ NEW WATCH</a>
+</header>
+
+<main style="flex: 1; display: flex; flex-wrap: wrap">
+<section aria-label="Describe" style="flex: 1 1 480px; min-width: 0; box-sizing: border-box; padding: 40px 36px; display: flex; flex-direction: column; gap: 28px">
+<div>
+<p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.24em; color: #C8F560">NEW WATCH</p>
+<h1 style="margin: 10px 0 0; font-size: 48px; font-weight: 600; line-height: 1.02; letter-spacing: -0.01em">What should Vigil watch for?</h1>
+</div>
+
+<div style="display: flex; gap: 14px; align-items: flex-start; border-bottom: 2px solid #C8F560; padding-bottom: 12px">
+<label for="words" style="font-family: 'JetBrains Mono', monospace; font-size: 22px; color: #C8F560; line-height: 1.35">&gt;</label>
+<textarea id="words" rows="3" value="{{ex.prompt}}" onChange="{{noop}}" style="flex: 1; min-width: 0; background: transparent; color: #F2F2F0; border: 0; padding: 0; font-family: 'Chakra Petch', sans-serif; font-size: 24px; line-height: 1.35; resize: none; outline: none"></textarea>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{list}}" as="item" hint-placeholder-count="8">
+<button type="button" onClick="{{item.pick}}" aria-pressed="{{item.pressed}}" style="min-height: 40px; padding: 0 14px; background: {{item.bg}}; color: {{item.color}}; border: 1px solid {{item.border}}; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; cursor: pointer">{{item.title}}</button>
+</sc-for>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.12)">
+<div style="background: #33373A; padding: 16px"><p style="margin: 0 0 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.22em; color: #A3A9AE">WHEN</p><p style="margin: 0; font-size: 17px">{{ex.when}}</p></div>
+<div style="background: #33373A; padding: 16px"><p style="margin: 0 0 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.22em; color: #A3A9AE">FOR</p><p style="margin: 0; font-size: 17px">{{ex.hold}}</p></div>
+<div style="background: #33373A; padding: 16px"><p style="margin: 0 0 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.22em; color: #A3A9AE">THEN</p><p style="margin: 0; font-size: 17px">{{ex.then}}</p><p style="margin: 2px 0 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: #C8F560">{{ex.apps}}</p></div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<a href="Watch.dc.html" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 26px; background: #C8F560; color: #1E2124; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; letter-spacing: 0.2em">START WATCHING →</a>
+<button type="button" style="min-height: 52px; padding: 0 22px; background: transparent; color: #F2F2F0; border: 1px solid rgba(255,255,255,0.3); font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.2em; cursor: pointer">TEST ON LAST HOUR</button>
+</div>
+</section>
+
+<section aria-label="Preview" style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; border-left: 1px solid rgba(255,255,255,0.12)">
+<div style="position: relative; overflow: hidden; background: #222528">
+<img src="{{ex.img}}" alt="{{ex.alt}}" style="display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; filter: grayscale(1) contrast(1.2) brightness(0.88)">
+<div aria-hidden="true" style="position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.25) 0 1px, transparent 1px 3px)"></div>
+<sc-if value="{{ex.hasBox}}" hint-placeholder-val="{{true}}">
+<div style="position: absolute; left: {{ex.bl}}%; top: {{ex.bt}}%; width: {{ex.bw}}%; height: {{ex.bh}}%; box-sizing: border-box; border: 1px solid rgba(200,245,96,0.35); background: linear-gradient(#C8F560,#C8F560) left top / 18px 3px no-repeat, linear-gradient(#C8F560,#C8F560) left top / 3px 18px no-repeat, linear-gradient(#C8F560,#C8F560) right top / 18px 3px no-repeat, linear-gradient(#C8F560,#C8F560) right top / 3px 18px no-repeat, linear-gradient(#C8F560,#C8F560) left bottom / 18px 3px no-repeat, linear-gradient(#C8F560,#C8F560) left bottom / 3px 18px no-repeat, linear-gradient(#C8F560,#C8F560) right bottom / 18px 3px no-repeat, linear-gradient(#C8F560,#C8F560) right bottom / 3px 18px no-repeat"></div>
+<p style="position: absolute; left: {{ex.bl}}%; top: {{ex.bt}}%; margin: 8px; background: #C8F560; color: #1E2124; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; padding: 4px 8px; white-space: nowrap">{{ex.boxLabel}}</p>
+</sc-if>
+<sc-if value="{{ex.hasLine}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; left: 33%; top: 16%; height: 50%; border-left: 2px dashed #C8F560"></div>
+<p style="position: absolute; left: calc(33% + 8px); top: 16%; margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.12em; color: #C8F560">LINE · IN →</p>
+</sc-if>
+<p style="position: absolute; left: 28px; top: 24px; margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.2em">{{ex.cam}}</p>
+<p style="position: absolute; right: 28px; top: 24px; margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.2em; color: #C8F560">● PREVIEW</p>
+</div>
+<p style="margin: 0; padding: 20px 28px; font-size: 15px; color: #B4B8BB">{{ex.learn}}</p>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { sel: 'package' };
+}
+renderVals() {
+const NEW = 'Never happened on this camera, so Vigil starts from your words. Your first YES becomes its first example.';
+const SEEN = 'Vigil found past moments like this on this camera, so it starts trained. Every reply sharpens it.';
+const ex = [
+{ id: 'package', title: 'Package left', cam: 'CAM 01 // FRONT PORCH', img: '/_blob/84be5f2fac1114ef0af82e13b80c02a4', alt: 'Porch camera with a cardboard package on the doormat', prompt: 'Text me when a package is left on the front step.', when: 'A package is on the porch', hold: '10 seconds', then: 'Text me the photo', apps: 'IMESSAGE', box: [41.7, 68.6, 18.5, 21.7], boxLabel: 'PACKAGE · 00:12', learn: SEEN },
+{ id: 'garage', title: 'Garage open', cam: 'CAM 02 // DRIVEWAY', img: '/_blob/e8c58d2cf3083209cc0addc3226a96e4', alt: 'Driveway camera at night with the garage door open', prompt: 'Text me if the garage door has been open for 15 minutes.', when: 'The garage door is open', hold: '15 minutes', then: 'Text me and my partner', apps: 'IMESSAGE', box: [34, 10, 28, 24], boxLabel: 'OPEN · 15:02', learn: SEEN },
+{ id: 'staging', title: 'Staging empty', cam: 'CAM 07 // LINE 1 STAGING', img: '/_blob/cf3e79b04084340fe414f6bdd91692bf', alt: 'Factory camera over a yellow-taped staging area that is empty', prompt: 'When Line 1 staging is empty for 2 minutes, add a restock task and text the handler.', when: 'Staging area is empty', hold: '2 minutes', then: 'Restock task, text handler', apps: 'HUBSPOT + IMESSAGE', box: [46.8, 39.1, 43.2, 53.3], boxLabel: 'EMPTY · 02:04', learn: SEEN },
+{ id: 'dock', title: 'Truck at dock', cam: 'CAM 11 // RECEIVING', img: '/_blob/c555f6db87f914ebc6e4553ce6c9af32', alt: 'Warehouse camera facing dock doors, a trailer backed into the middle one', prompt: 'When a truck backs into dock 2, tell receiving and log the arrival.', when: 'A trailer is at dock 2', hold: '30 seconds', then: 'Post in #receiving, log it', apps: 'SLACK + WEBHOOK', box: [41, 10, 19, 42], boxLabel: 'TRAILER · DOCK 2', learn: SEEN },
+{ id: 'hardhat', title: 'No hard hat', cam: 'CAM 04 // PUMP STATION', img: '/_blob/84102ea2905acd192961b0d9275414c9', alt: 'Pump station CCTV with one worker in a hard hat and one without', prompt: 'Text the shift lead if anyone at the pump isn’t wearing a hard hat.', when: 'Someone without a hard hat', hold: '3 seconds', then: 'Text lead, log a note', apps: 'IMESSAGE + HUBSPOT', box: null, learn: SEEN },
+{ id: 'fireexit', title: 'Exit blocked', cam: 'CAM 09 // AISLE 9 EXIT', img: '/_blob/5fd66657e881643d881e852fff9d8869', alt: 'Warehouse aisle with a pallet left in front of the emergency exit', prompt: 'Tell facilities if anything blocks the fire exit for 5 minutes.', when: 'Something blocks the exit', hold: '5 minutes', then: 'Ticket and #facilities post', apps: 'HUBSPOT + SLACK', box: [42, 15, 23, 60], boxLabel: 'BLOCKED · 05:10', learn: NEW },
+{ id: 'checkout', title: 'Long line', cam: 'CAM 05 // CHECKOUT', img: '/_blob/e654befc0aa49c14223b87e4338a9ec8', alt: 'Store ceiling camera with five shoppers waiting at one register', prompt: 'Text the store manager when more than 4 people are waiting to pay.', when: 'More than 4 in line', hold: '1 minute', then: 'Text the manager', apps: 'IMESSAGE', box: [40, 20, 26, 78], boxLabel: '5 WAITING · 01:10', learn: SEEN },
+{ id: 'walkins', title: 'Count walk-ins', cam: 'CAM 02 // PLAZA ENTRANCE', img: '/_blob/f9506a6ed26fcba603e73e8540bfd601', alt: 'Plaza camera with people walking across the path', prompt: 'Count everyone who walks in from the street side.', when: 'Someone crosses, walking in', hold: 'Once per person', then: 'Add to the traffic log', apps: 'WEBHOOK', box: null, line: true, learn: SEEN }
+];
+const cur = ex.find((e) => e.id === this.state.sel) || ex[0];
+const list = ex.map((e) => ({
+title: e.title,
+pressed: e.id === cur.id ? 'true' : 'false',
+bg: e.id === cur.id ? '#C8F560' : 'transparent',
+color: e.id === cur.id ? '#000000' : '#C9CCCE',
+border: e.id === cur.id ? '#C8F560' : 'rgba(255,255,255,0.22)',
+pick: () => this.setState({ sel: e.id })
+}));
+const b = cur.box || [0, 0, 0, 0];
+return {
+list: list,
+noop: () => {},
+ex: Object.assign({}, cur, { hasBox: !!cur.box, hasLine: !!cur.line, bl: b[0], bt: b[1], bw: b[2], bh: b[3] })
+};
+}
+}
+</script>
+</body>
+</html>

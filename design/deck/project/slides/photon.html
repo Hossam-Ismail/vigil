@@ -1,0 +1,39 @@
+<section id="photon" data-transition="fade" style="background:#0D0F11;color:#EEF0EA;font-family:'Geist', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-family:'Geist Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#C8F560">Under the hood · Built on Photon</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.08;letter-spacing:-2px;color:#EEF0EA">An agent that lives in iMessage</h2>
+<p style="font-size:28px;line-height:1.45;color:#A4ACB6;width:1300px">No app to install, no dashboard to watch. Photon carries every alert, photo and answer, so the whole loop runs in the thread people already check.</p>
+</div>
+<div style="display:flex;gap:16px;align-items:stretch">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#16191D;border:1px solid #262B31;border-radius:20px;padding:32px">
+<p style="font-family:'Geist Mono', 'Courier New', monospace;font-size:24px;color:#C8F560">01</p>
+<h3 style="font-size:30px;font-weight:700;color:#EEF0EA">Camera sees it</h3>
+<p style="font-size:26px;line-height:1.4;color:#A4ACB6">The watch's own model flags the moment.</p>
+</div>
+<x-connector style="width:48px;align-self:center;color:#4F5A2C;border-width:3px"></x-connector>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#16191D;border:1px solid #262B31;border-radius:20px;padding:32px">
+<p style="font-family:'Geist Mono', 'Courier New', monospace;font-size:24px;color:#C8F560">02</p>
+<h3 style="font-size:30px;font-weight:700;color:#EEF0EA">Double-checked</h3>
+<p style="font-size:26px;line-height:1.4;color:#A4ACB6">A stronger AI confirms it before anyone is pinged.</p>
+</div>
+<x-connector style="width:48px;align-self:center;color:#4F5A2C;border-width:3px"></x-connector>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#1B2410;border:2px solid #C8F560;border-radius:20px;padding:32px">
+<p style="font-family:'Geist Mono', 'Courier New', monospace;font-size:24px;color:#C8F560">03 · Photon</p>
+<h3 style="font-size:30px;font-weight:700;color:#EEF0EA">Texted, with the photo</h3>
+<p style="font-size:26px;line-height:1.4;color:#EEF0EA">Photon sends it over iMessage to the right person.</p>
+</div>
+<x-connector style="width:48px;align-self:center;color:#4F5A2C;border-width:3px"></x-connector>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#1B2410;border:2px solid #C8F560;border-radius:20px;padding:32px">
+<p style="font-family:'Geist Mono', 'Courier New', monospace;font-size:24px;color:#C8F560">04 · Photon</p>
+<h3 style="font-size:30px;font-weight:700;color:#EEF0EA">They reply YES or NO</h3>
+<p style="font-size:26px;line-height:1.4;color:#EEF0EA">Photon brings the reply back, matched to that alert.</p>
+</div>
+</div>
+<div style="display:flex;gap:20px;align-items:center;background:#16191D;border:1px solid #3E4A22;border-radius:16px;padding:24px 32px">
+<x-icon name="Activity" style="color:#C8F560;width:36px;height:36px"></x-icon>
+<p style="font-size:28px;line-height:1.4;color:#EEF0EA"><b>Back to 01:</b> <span style="color:#A4ACB6">the answer becomes a training example and that watch retrains.</span></p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'Geist Mono', 'Courier New', monospace;font-size:24px;color:#7C848F">Vigil · iMessage by Photon</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-family:'Geist Mono', 'Courier New', monospace;font-size:24px;color:#7C848F">04</p>
+<aside>Photon is the messaging layer that makes Vigil an agent people talk to instead of a dashboard they have to check. The loop: the per-watch model flags a frame, the larger model double-checks it, and Vigil sends the text and the photo through Photon to whoever the request named. The person answers YES or NO right in the thread; Photon delivers the reply back, Vigil matches it to the alert it answers, adds it to that watch's training set and retrains. Today the bridge is built on Photon's imessage-kit on a Mac signed in to Messages, so it works with any iPhone and nobody installs anything. The next slide shows a real message from that loop.</aside>
+</section>

@@ -1,12 +1,14 @@
 import { Square, Video } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { Logo } from '../components/Layout'
 import { Button } from '../components/ui'
 
 /** Turns this browser tab (phone or laptop) into a camera that streams JPEG frames to Vigil. */
 export function PushCamera() {
   const { id } = useParams()
+  const [params] = useSearchParams()
+  const key = params.get('k')
   const video = useRef<HTMLVideoElement>(null)
   const [running, setRunning] = useState(false)
   const [sent, setSent] = useState(0)
@@ -28,7 +30,7 @@ export function PushCamera() {
       v.srcObject = stream
       await v.play()
       const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-      const ws = new WebSocket(`${proto}://${location.host}/api/cameras/${id}/push`)
+      const ws = new WebSocket(`${proto}://${location.host}/api/cameras/${id}/push${key ? `?k=${encodeURIComponent(key)}` : ''}`)
       ws.binaryType = 'arraybuffer'
       const canvas = document.createElement('canvas')
       let timer: ReturnType<typeof setInterval> | undefined

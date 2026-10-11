@@ -1,5 +1,6 @@
 import { ArrowLeft, PackageMinus, PackagePlus, Smartphone } from 'lucide-react'
-import { useEffect } from 'react'
+import QRCode from 'qrcode'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { CameraView } from '../components/CameraView'
 import { EventRow } from '../components/EventRow'
@@ -7,31 +8,36 @@ import { Page } from '../components/Layout'
 import { PromptBar } from '../components/PromptBar'
 import { Button, Card, Empty, SectionTitle, Toggle } from '../components/ui'
 import { WatchChip } from '../components/WatchChip'
-import { api, type Camera, type Health, type VEvent, type Watch } from '../lib/api'
+import { api, type Camera, type VEvent, type Watch } from '../lib/api'
 import { useFetch, useInterval } from '../lib/hooks'
 import { useLive } from '../lib/live'
 import { CameraStatusDot } from './Live'
 
-/** How to turn a phone into this camera. On a phone, "localhost" is the phone itself, and phone browsers only
- *  allow the camera on HTTPS, so the link is Vigil's HTTPS address on the Wi-Fi. */
+/** How to turn a phone into this camera: scan the QR code (or open the link) and tap Start streaming. */
 function PhoneSetup({ id }: { id: number }) {
-  const health = useFetch<Health>('/api/health')
-  const local = ['localhost', '127.0.0.1'].includes(location.hostname)
-  const base = local ? health.data?.lan_url : location.origin
-  const link = base ? `${base}/push/${id}` : null
+  const link = useFetch<{ url: string | null; path: string; public: boolean }>(`/api/cameras/${id}/phone-link`)
+  const [qr, setQr] = useState<string | null>(null)
+  const url = link.data?.url ?? null
+  useEffect(() => {
+    if (!url) return
+    QRCode.toDataURL(url, { margin: 1, width: 360, color: { dark: '#16181a', light: '#ffffff' } }).then(setQr).catch(() => setQr(null))
+  }, [url])
   return (
     <Card className="p-4 text-[12.5px] text-muted">
       <SectionTitle>Use a phone as this camera</SectionTitle>
-      {link ? (
-        <ol className="flex list-decimal flex-col gap-1.5 pl-4">
-          <li>Join the same Wi-Fi as this computer.</li>
-          <li>On the phone, open <span className="num select-all break-all text-ink">{link}</span></li>
-          {local && <li>Safari says the connection isn't private (Vigil's own certificate): tap <em>Show Details</em>, then <em>visit this website</em>.</li>}
-          <li>Sign in, tap <em>Start streaming</em> and allow the camera.</li>
-          <li>Keep the screen on and the phone plugged in.</li>
-        </ol>
+      {url ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          {qr && <img src={qr} alt="QR code that opens this camera on a phone" className="size-40 shrink-0 rounded-lg bg-white p-1.5" />}
+          <ol className="flex list-decimal flex-col gap-1.5 pl-4">
+            <li>Scan the code with the phone's camera{link.data?.public ? '' : ' (the phone must be on the same Wi-Fi)'}.</li>
+            {!link.data?.public && <li>Safari may say the connection isn't private (Vigil's own certificate): tap <em>Show Details</em>, then <em>visit this website</em>.</li>}
+            <li>Tap <em>Start streaming</em> and allow the camera.</li>
+            <li>Keep the screen on and the phone plugged in.</li>
+            <li className="list-none -ml-4 pt-1">Or open <span className="num select-all break-all text-ink">{url}</span></li>
+          </ol>
+        </div>
       ) : (
-        <div>Vigil isn't reachable on the Wi-Fi from here. Start it with HTTPS on the network (VIGIL_LAN_HTTPS_PORT) or open Vigil from its network address.</div>
+        <div>Vigil isn't reachable from other devices yet. Set a public address in Settings, or start Vigil with HTTPS on the network.</div>
       )}
     </Card>
   )

@@ -65,7 +65,8 @@ class App:
         self.db = DB(settings.db_path)
         self.hub = CameraHub()
         self.store = ModelStore(self.db, get_embedder)
-        self.notifier = Notifier(self.db, self.db.get_kv("public_url", f"http://{settings.host}:{settings.port}"))
+        self.notifier = Notifier(self.db, (self.db.get_kv("integrations", {}) or {}).get("public_url")
+                                 or self.db.get_kv("public_url", f"http://{settings.host}:{settings.port}"))
         self.actions = ActionRunner(self.db)
         self.bridge = BridgeSupervisor(self.actions.bridge_url)
         self.janitor = privacy.Janitor(self.db)
@@ -397,6 +398,7 @@ def health() -> dict:
         "embed_model": settings.embed_model,
         "detectors": {"coco": f"RF-DETR {settings.coco_model}", "open_vocab": settings.open_vocab_model},
         "lan_url": lan_url(),
+        "public_url": _public_url() or None,
     }
 
 
@@ -436,6 +438,8 @@ def put_settings(body: SettingsIn) -> dict:
                 else:
                     integ.pop(k, None)
         S().db.set_kv("integrations", integ)
+        if integ.get("public_url"):
+            S().notifier.public_url = integ["public_url"].rstrip("/")   # links in alerts open the public address
     if body.privacy is not None:
         S().db.set_kv("privacy", privacy.apply({**privacy.current(), **body.privacy}))
     if body.brain is not None:
@@ -755,8 +759,69 @@ async def stream(cid: int, fps: float = 8.0) -> StreamingResponse:
                              headers={"Cache-Control": "no-store"})
 
 
+def _push_key(cid: int) -> str:
+    """A per-camera secret for the phone streaming link, so only someone given the link (or the QR) can feed
+    video into that camera."""
+    import hashlib
+    import hmac
+    import secrets
+
+    secret = S().db.get_kv("push_secret", "")
+    if not secret:
+        secret = secrets.token_hex(16)
+        S().db.set_kv("push_secret", secret)
+    return hmac.new(secret.encode(), f"camera-{cid}".encode(), hashlib.sha256).hexdigest()[:20]
+
+
+_tunnel = {"at": 0.0, "url": ""}
+
+
+def _tunnel_url() -> str:
+    """The address of a running Cloudflare quick tunnel to this server (it changes every time the tunnel starts)."""
+    import json
+    import urllib.request
+
+    if time.time() - _tunnel["at"] > 20:
+        _tunnel["at"] = time.time()
+        try:
+            with urllib.request.urlopen(f"http://{settings.tunnel_metrics}/quicktunnel", timeout=0.5) as r:
+                host = json.load(r).get("hostname") or ""
+            _tunnel["url"] = f"https://{host}" if host else ""
+        except Exception:  # noqa: BLE001
+            _tunnel["url"] = ""
+    return _tunnel["url"]
+
+
+def _public_url() -> str:
+    """Where Vigil is reachable from anywhere: your own address from Settings, else a running tunnel, else ""."""
+    integ = S().db.get_kv("integrations", {}) or {}
+    own = (integ.get("public_url") or S().db.get_kv("public_url", "") or "").rstrip("/")
+    url = own if own and "trycloudflare.com" not in own else (_tunnel_url() or own)
+    if url and S().notifier.public_url != url:
+        S().notifier.public_url = url   # links in alerts open the same address
+    return url
+
+
+def public_base() -> str:
+    """Where people outside this computer reach Vigil: the public address if one is set, else the Wi-Fi one."""
+    return _public_url() or (lan_url() or "")
+
+
+@app.get("/api/cameras/{cid}/phone-link")
+def phone_link(cid: int) -> dict:
+    """The link (and what to put in the QR code) that turns a phone into this camera."""
+    _cam_or_404(cid)
+    base = public_base()
+    path = f"/push/{cid}?k={_push_key(cid)}"
+    return {"url": f"{base}{path}" if base else None, "path": path, "public": bool(_public_url())}
+
+
 @app.websocket("/api/cameras/{cid}/push")
 async def push(ws: WebSocket, cid: int) -> None:
+    signed_in = S().accounts.session_user(ws.cookies.get(COOKIE))
+    if not signed_in and ws.query_params.get("k") != _push_key(cid):
+        await ws.close(code=4401)
+        return
     await ws.accept()
     rt = S().hub.get(cid)
     if not rt or not rt.push_source:

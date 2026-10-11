@@ -22,3 +22,5 @@ imessage-bridge/node_modules/
 brand/**/seq/
 brand/pexels/
 brand/cover/
+deploy/vercel/public/
+deploy/vercel/.vercel/

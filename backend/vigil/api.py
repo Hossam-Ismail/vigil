@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import platform
+import re
 import threading
 import time
 from contextlib import asynccontextmanager
@@ -992,6 +993,34 @@ def _sanitize(raw: dict) -> WatchSpec:
     return WatchSpec.model_validate(raw)
 
 
+PHONE_USE = re.compile(r"\b(on (their|his|her|my|a|the) (cell ?)?phone|using (their|his|her|my|a|the) (cell ?)?phone|"
+                       r"holding (a|their|his|her|my|the) (cell ?)?phone|(cell ?)?phones? (out|in (their|his|her|my) hand)|"
+                       r"picks? up (their|his|her|my|a|the) phone|on the phone|smartphone)\b", re.I)
+EXPLICIT_TIME = re.compile(r"\b\d+\s*(s|sec|secs|second|seconds|min|mins|minute|minutes|h|hr|hrs|hour|hours)\b", re.I)
+EACH_NEW = re.compile(r"\b(each|every) (new )?(person|one|arrival|car|truck|visitor|customer)\b|\bnew (person|people|arrival)\b|"
+                      r"\b(comes|walks|steps|drives) in\b|\benters\b|\barrives\b", re.I)
+
+
+def _live_defaults(spec: WatchSpec, prompt: str) -> None:
+    """Make a fresh watch respond the way people expect when they try it live.
+
+    "On their phone" is a phone being visible, which the detector sees directly. Unless the request names a
+    duration, an alert needs about a second of agreement (not five) and can repeat after 20 seconds; "once per
+    person" only when the request asks for each new arrival.
+    """
+    if PHONE_USE.search(prompt) and spec.kind in ("presence", "state") and not spec.library:
+        spec.kind = "presence"
+        spec.targets = ["cell phone"]
+        spec.target_question = ""
+        spec.zone = None
+        spec.check_interval_s = 0.0
+    if not EXPLICIT_TIME.search(prompt):
+        spec.min_duration_s = min(spec.min_duration_s, 1.0)
+        spec.cooldown_s = min(spec.cooldown_s, 20.0)
+    if spec.trigger == "per_object" and spec.crossing == "none" and not EACH_NEW.search(prompt):
+        spec.trigger = "rising"
+
+
 @app.post("/api/watches/draft")
 def draft_watch(body: WatchDraftIn) -> dict:
     cam = _cam_or_404(body.camera_id)
@@ -1015,6 +1044,7 @@ def draft_watch(body: WatchDraftIn) -> dict:
         _enforce(Verdict(False, str(pol.get("category") or "policy"), str(pol.get("reason") or "This request is outside what Vigil watches for."),
                          str(pol.get("suggestion") or "Describe an object, event or condition instead.")))
     spec = _sanitize(raw)
+    _live_defaults(spec, prompt)
     _enforce(check_spec(spec.model_dump()))
     t = time.time()
     try:

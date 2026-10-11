@@ -69,6 +69,11 @@ def coco_class_for(target: str) -> str | None:
     return None
 
 
+# small things held in a hand score lower than people and cars; these classes count from a lower confidence
+SMALL_CLASS_THRESHOLD = {"cell phone": 0.25, "cup": 0.3, "bottle": 0.3, "wine glass": 0.3, "book": 0.3, "remote": 0.3,
+                         "scissors": 0.3, "knife": 0.3, "toothbrush": 0.3, "mouse": 0.3}
+
+
 @dataclass
 class Detection:
     label: str  # the user's target word
@@ -97,12 +102,13 @@ class CocoDetector:
             return []
         h, w = frame.shape[:2]
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        floor = min([threshold] + [SMALL_CLASS_THRESHOLD[n] for n in wanted if n in SMALL_CLASS_THRESHOLD])
         with gpu_lock:
-            dets = self.model.predict(rgb, threshold=threshold)
+            dets = self.model.predict(rgb, threshold=floor)
         out: list[Detection] = []
         for xyxy, cid, conf in zip(dets.xyxy, dets.class_id, dets.confidence):
             name = self.names.get(int(cid))
-            if name not in wanted:
+            if name not in wanted or float(conf) < SMALL_CLASS_THRESHOLD.get(name, threshold):
                 continue
             box = (float(xyxy[0] / w), float(xyxy[1] / h), float(xyxy[2] / w), float(xyxy[3] / h))
             for label in wanted[name]:

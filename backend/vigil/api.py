@@ -410,7 +410,7 @@ def _latest_frame(cid: int, wait: float = 4.0) -> np.ndarray:
 
 @app.post("/api/safety/check")
 def safety_check(request: Request, text: str = Body(..., embed=True)) -> dict:
-    """The marketing site's "try to misuse it" box: the fixed rules, then an AI reviewer (OpenAI) for what the rules
+    """The marketing site's "try to misuse it" box: the fixed rules, then an AI reviewer (Gemini) for what the rules
     miss. It only reads the words; nothing is watched or stored."""
     from .policy_ai import review
 

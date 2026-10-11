@@ -1,9 +1,9 @@
-"""The marketing site's "try to misuse it" box: an OpenAI model reads the request the way a person would, with Vigil's
+"""The marketing site's "try to misuse it" box: a Gemini model reads the request the way a person would, with Vigil's
 fixed safety rules as a hint it can overrule (they are keyword rules: "a man lying on the floor" trips them, while
 "is the cashier slacking off" slips past). Without a key, or past the rate limit, the rules alone answer.
 
 Only the public demo on the website uses this. Real watches are still checked by safety.py and by the brain that
-compiles them. The key comes from OPENAI_API_KEY (vigil/.env); without it, the rules alone answer.
+compiles them. The key comes from GEMINI_API_KEY (vigil/.env); without it, the rules alone answer.
 """
 
 from __future__ import annotations
@@ -20,7 +20,8 @@ from .safety import check_text
 
 log = logging.getLogger("vigil.policy_ai")
 
-MODEL = os.environ.get("VIGIL_POLICY_MODEL", "gpt-4.1-mini")
+MODEL = os.environ.get("VIGIL_POLICY_MODEL", "gemini-2.5-flash")
+URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 CATEGORIES = ["identity", "protected_traits", "bodies", "private_spaces", "covert", "inference", "minors", "harm", "none"]
 
 SYSTEM = """You review requests typed into Vigil, a camera app. A person types what a camera should watch for and what to do,
@@ -60,19 +61,15 @@ Write for the person who typed it, plainly, at most 20 words each, never saying 
 A line "Keyword rules:" may follow the request; it is a hint from simple keyword matching and can be wrong either way."""
 
 SCHEMA = {
-    "name": "verdict",
-    "strict": True,
-    "schema": {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {
-            "allowed": {"type": "boolean"},
-            "category": {"type": "string", "enum": CATEGORIES},
-            "reason": {"type": "string"},
-            "suggestion": {"type": "string"},
-        },
-        "required": ["allowed", "category", "reason", "suggestion"],
+    "type": "OBJECT",
+    "properties": {
+        "allowed": {"type": "BOOLEAN"},
+        "category": {"type": "STRING", "enum": CATEGORIES},
+        "reason": {"type": "STRING"},
+        "suggestion": {"type": "STRING"},
     },
+    "required": ["allowed", "category", "reason", "suggestion"],
+    "propertyOrdering": ["allowed", "category", "reason", "suggestion"],
 }
 
 _lock = threading.Lock()
@@ -96,20 +93,21 @@ def review(text: str, ip: str = "") -> dict:
         return {"allowed": False, "category": "none", "reason": "Type a request to check.", "suggestion": "", "by": "rules"}
     rules = check_text(text)
     fallback = {**rules.out(), "by": "rules"} if not rules.allowed else {**rules.out(), "reason": "Vigil would watch for this.", "by": "rules"}
-    key = os.environ.get("OPENAI_API_KEY", "")
+    key = os.environ.get("GEMINI_API_KEY", "")
     if text.lower() in _cache:
         return _cache[text.lower()]
     if not key or _limited(ip):
         return fallback
     hint = f"\nKeyword rules: flagged as {rules.category} ({rules.reason})" if not rules.allowed else "\nKeyword rules: nothing flagged"
     try:
-        r = _http.post("https://api.openai.com/v1/chat/completions", headers={"Authorization": f"Bearer {key}"}, json={
-            "model": MODEL, "temperature": 0,
-            "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": f"Request: {json.dumps(text)}{hint}"}],
-            "response_format": {"type": "json_schema", "json_schema": SCHEMA},
+        r = _http.post(URL.format(model=MODEL), headers={"x-goog-api-key": key}, json={
+            "systemInstruction": {"parts": [{"text": SYSTEM}]},
+            "contents": [{"role": "user", "parts": [{"text": f"Request: {json.dumps(text)}{hint}"}]}],
+            "generationConfig": {"temperature": 0, "responseMimeType": "application/json", "responseSchema": SCHEMA,
+                                 "thinkingConfig": {"thinkingBudget": 0}},
         })
         r.raise_for_status()
-        v = json.loads(r.json()["choices"][0]["message"]["content"])
+        v = json.loads(r.json()["candidates"][0]["content"]["parts"][0]["text"])
         out = {"allowed": bool(v["allowed"]), "category": v["category"] if not v["allowed"] else "",
                "reason": v["reason"].strip(), "suggestion": v["suggestion"].strip().strip('"“”') if not v["allowed"] else "", "by": "ai"}
     except Exception as exc:  # noqa: BLE001

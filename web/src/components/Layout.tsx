@@ -1,13 +1,16 @@
 import { BarChart3, Bell, Brain, Camera, Eye, LayoutGrid, Settings, X, FlaskConical } from 'lucide-react'
 import { useAuth, signOut } from '../lib/auth'
 import { BetaPill } from '../pages/Welcome'
-import { FeedbackButton } from './Feedback'
+import { FeedbackButton, FeedbackModal } from './Feedback'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api, media, type Health } from '../lib/api'
 import { timeAgo } from '../lib/format'
 import { dismissToast, useLive } from '../lib/live'
 import { cx } from './ui'
+
+/** Phone tab bar: the five everyday screens; Lab and Settings sit in the account menu. */
+const TABS = ['/', '/watches', '/metrics', '/events', '/cameras']
 
 const NAV = [
   { to: '/', label: 'Live', icon: LayoutGrid, end: true },
@@ -50,7 +53,7 @@ function Toasts() {
     return () => clearTimeout(id)
   }, [toasts])
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex w-[360px] max-w-[calc(100vw-2rem)] flex-col gap-2">
+    <div className="fixed bottom-20 right-4 z-50 flex w-[360px] md:bottom-4 max-w-[calc(100vw-2rem)] flex-col gap-2">
       {toasts.map(({ id, event }) => (
         <div key={id} className="slide-in flex gap-3 rounded-xl border border-alert/40 bg-panel p-2.5 shadow-2xl shadow-black/40">
           <button onClick={() => { dismissToast(id); nav(`/events?open=${event.id}`) }} className="shrink-0">
@@ -85,13 +88,13 @@ export function Layout() {
   const unseen = useLive((s) => s.events.filter((e) => e.status === 'confirmed' || e.status === 'unverified').length)
   return (
     <div className="flex h-full flex-col">
-      <header className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-b border-line bg-bg px-4 py-3 md:px-7">
+      <header className="flex shrink-0 items-center gap-x-3 border-b border-line bg-bg px-4 py-2.5 md:gap-x-6 md:px-7 md:py-3">
         <NavLink to="/" className="flex items-center gap-2.5 text-ink">
           <Logo className="size-8" />
           <span className="text-[18px] font-semibold tracking-[0.3em]">VIGIL</span>
           <BetaPill />
         </NavLink>
-        <nav aria-label="Main" className="order-3 flex w-full gap-1 overflow-x-auto md:order-none md:w-auto">
+        <nav aria-label="Main" className="hidden gap-1 md:flex">
           {NAV.map(({ to, label, end }) => (
             <NavLink
               key={to}
@@ -110,10 +113,10 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex items-center gap-3 md:gap-4">
           <BrainStatus />
           <NavLink to="/new" className="hud flex h-9 items-center border border-accent px-3 text-accent hover:bg-accent hover:text-accent-ink">
-            + NEW WATCH
+            + NEW<span className="hidden sm:inline">&nbsp;WATCH</span>
           </NavLink>
           <AccountMenu />
         </div>
@@ -121,6 +124,21 @@ export function Layout() {
       <main className="min-h-0 flex-1 overflow-y-auto">
         <Outlet />
       </main>
+      <nav aria-label="Main" className="grid shrink-0 grid-cols-5 border-t border-line bg-bg pb-[env(safe-area-inset-bottom)] md:hidden">
+        {NAV.filter((n) => TABS.includes(n.to)).map(({ to, label, icon: Icon, end }) => (
+          <NavLink key={to} to={to} end={end}
+            className={({ isActive }) => cx('relative flex flex-col items-center gap-1 pb-2 pt-2.5 text-[10.5px] font-medium tracking-wide', isActive ? 'text-accent' : 'text-muted')}>
+            {({ isActive }) => (
+              <>
+                {isActive && <span className="absolute inset-x-5 top-0 h-0.5 bg-accent" />}
+                <Icon className="size-[19px]" />
+                {label}
+                {to === '/events' && unseen > 0 && <span className="num absolute right-3 top-1.5 rounded-full bg-accent px-1 text-[9.5px] leading-4 text-accent-ink">{unseen}</span>}
+              </>
+            )}
+          </NavLink>
+        ))}
+      </nav>
       <Toasts />
       <FeedbackButton />
     </div>
@@ -130,6 +148,7 @@ export function Layout() {
 function AccountMenu() {
   const { me } = useAuth()
   const [open, setOpen] = useState(false)
+  const [feedback, setFeedback] = useState(false)
   if (!me) return null
   return (
     <div className="relative">
@@ -144,10 +163,13 @@ function AccountMenu() {
             {me.profile.use ? `${me.profile.use}${me.profile.business_type ? ` · ${me.profile.business_type}` : ''}` : ''} · AI key {me.ai_key_hint}
           </div>
           <div className="my-2 h-px bg-line" />
+          <NavLink to="/lab" onClick={() => setOpen(false)} className="block rounded-md px-2 py-1.5 text-ink-2 hover:bg-panel-2 hover:text-ink md:hidden">Lab</NavLink>
           <NavLink to="/settings" onClick={() => setOpen(false)} className="block rounded-md px-2 py-1.5 text-ink-2 hover:bg-panel-2 hover:text-ink">Account &amp; settings</NavLink>
+          <button onClick={() => { setOpen(false); setFeedback(true) }} className="block w-full rounded-md px-2 py-1.5 text-left text-ink-2 hover:bg-panel-2 hover:text-ink md:hidden">Beta feedback</button>
           <button onClick={signOut} className="block w-full rounded-md px-2 py-1.5 text-left text-ink-2 hover:bg-panel-2 hover:text-ink">Sign out</button>
         </div>
       )}
+      {feedback && <FeedbackModal onClose={() => setFeedback(false)} />}
     </div>
   )
 }

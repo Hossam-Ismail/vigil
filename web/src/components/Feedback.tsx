@@ -17,9 +17,10 @@ export function FeedbackButton() {
   return (
     <>
       <button onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-4 z-40 flex items-center gap-2 rounded-full border border-accent/50 bg-panel px-3.5 py-2 text-[12.5px] font-medium text-ink shadow-xl shadow-black/30 hover:border-accent">
+        className="fixed bottom-4 left-4 z-40 hidden items-center md:flex gap-2 rounded-full border border-accent/50 bg-panel px-3.5 py-2 text-[12.5px] font-medium text-ink shadow-xl shadow-black/30 hover:border-accent">
         <MessageSquareHeart className="size-4 text-accent" /> Beta feedback
       </button>
+      {/* on phones the button lives in the account menu, so nothing floats over the page */}
       {open && <FeedbackModal onClose={() => setOpen(false)} />}
     </>
   )

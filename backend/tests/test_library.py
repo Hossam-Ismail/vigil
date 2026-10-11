@@ -32,3 +32,11 @@ def test_verb_forms_and_aliases(monkeypatch):
 def test_library_has_ten_with_two_not_native():
     assert len(lib.LIBRARY) == 10
     assert sorted(m.id for m in lib.LIBRARY if not m.native) == ["pose", "xclip"]
+
+
+def test_exercise_and_drinking_wording():
+    from vigil.perception.library import match_action
+    for t in ("Text me when someone does pushups", "someone doing push-ups", "tell me when someone is doing push ups"):
+        assert match_action(t) == ["push up"]
+    assert match_action("someone doing sit ups") == ["situp"]
+    assert {"drinking", "drinking beer"} <= set(match_action("text me when someone is drinking"))

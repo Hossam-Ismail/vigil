@@ -152,12 +152,16 @@ def _stem(w: str) -> str:
     return w
 
 
-ALIASES = [({"touch", "hair"}, "fixing hair"), ({"phone", "typing"}, "texting")]
+ALIASES = [({"touch", "hair"}, "fixing hair"), ({"phone", "typing"}, "texting"),
+           # Kinetics names with no "-ing" word, and the other ways people drink on camera
+           ({"pushup"}, "push up"), ({"situp"}, "situp"),
+           ({"drink"}, "drinking beer"), ({"drink"}, "drinking shots"), ({"drink"}, "tasting beer")]
 
 
 def match_action(text: str) -> list[str]:
     """Kinetics actions named in the request, in any verb form ("drinks", "is drinking", "mopping the floor"):
     every word of the action's name must be in the request ("floor"/"hands" may be left out)."""
+    text = re.sub(r"\b(push|sit)[\s-]*ups?\b", r"\1up", text, flags=re.I)  # push ups / push-ups -> pushup
     stems = {_stem(w) for w in _words(text)}
     out = []
     for label in kinetics_labels():
@@ -295,7 +299,7 @@ class Runner:
         idx = np.linspace(0, len(frames) - 1, 16).round().astype(int)
         clip = [cv2.cvtColor(frames[i], cv2.COLOR_BGR2RGB) for i in idx]
         probs = self._probs(model, model[0](clip, return_tensors="pt"))
-        return max((v for k, v in probs.items() if k in self.yes), default=0.0)
+        return min(1.0, sum(v for k, v in probs.items() if k in self.yes))  # chance of any of the matched actions
 
     def top(self, frames: list[np.ndarray], n: int = 3) -> list[tuple[str, float]]:
         """The model's own top answers for a clip (shown in the review screen)."""

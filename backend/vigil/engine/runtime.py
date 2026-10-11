@@ -125,6 +125,7 @@ class WatchRuntime:
         self._bucket: dict | None = None
         self.last_crop: np.ndarray | None = None
         self.last_crop_emb: np.ndarray | None = None
+        self.model = None  # the watch's own fine-tuned model (learning.finetune.TrainedModel), when it has one
 
     # ---- configuration -------------------------------------------------
     @property
@@ -132,8 +133,18 @@ class WatchRuntime:
         return self.spec.kind == "state"
 
     @property
+    def uses_model(self) -> bool:
+        return self.model is not None
+
+    @property
+    def model_detects(self) -> bool:
+        return self.model is not None and self.model.kind == "detector"
+
+    @property
     def uses_object_head(self) -> bool:
         """Presence/count watches run the per-object head only once it has something to say."""
+        if self.model is not None:
+            return False  # the watch's own model already decided
         if self.is_state:
             return False
         if self.spec.target_question:
@@ -148,12 +159,15 @@ class WatchRuntime:
         return ts - self.last_eval >= self.spec.check_interval_s
 
     # ---- state watches -------------------------------------------------
-    def step_state(self, ts: float, emb: np.ndarray) -> Trigger | None:
+    def step_state(self, ts: float, emb: np.ndarray | None = None, *, p: float | None = None,
+                   threshold: float | None = None) -> Trigger | None:
+        """One check of a yes/no watch: from the head on an embedding, or a probability from the watch's model."""
         self.last_eval = ts
-        p = float(self.head.proba(emb)[0])
+        if p is None:
+            p = float(self.head.proba(emb)[0])
         self.score = p
         self.history.append((ts, p))
-        thr = self.head.threshold
+        thr = self.head.threshold if threshold is None else threshold
         cond = self.vote.update(p >= thr, p < max(0.05, thr - 0.12))
         self.cond = cond
         self._record(ts, cond=cond)
@@ -315,8 +329,8 @@ class WatchRuntime:
             "count": self.count,
             "cond": self.cond,
             "phase": self.machine.phase,
-            "threshold": round(self.head.threshold, 3),
-            "head_mode": self.head.mode,
+            "threshold": round(self.model.threshold if self.model else self.head.threshold, 3),
+            "head_mode": "finetuned" if self.model else self.head.mode,
             "paused": self.paused,
             "tracks": [
                 {"id": t.id, "label": t.label, "box": [round(v, 4) for v in t.box],

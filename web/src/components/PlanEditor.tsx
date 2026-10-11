@@ -4,7 +4,7 @@ import { ActionsEditor } from './ActionsEditor'
 import { CROSS_LABEL } from './Tripwire'
 import { cx, Field, inputCls, Toggle } from './ui'
 
-export function PlanEditor({ spec, onChange }: { spec: WatchSpec; onChange: (s: WatchSpec) => void }) {
+export function PlanEditor({ spec, onChange, compact }: { spec: WatchSpec; onChange: (s: WatchSpec) => void; compact?: boolean }) {
   const set = <K extends keyof WatchSpec>(k: K, v: WatchSpec[K]) => onChange({ ...spec, [k]: v })
   return (
     <div className="flex flex-col gap-4">
@@ -71,13 +71,13 @@ export function PlanEditor({ spec, onChange }: { spec: WatchSpec; onChange: (s: 
             <span className="absolute right-3 top-2 text-muted text-[12.5px]">sec</span>
           </div>
         </Field>
-        <Field label="Alert">
+        {!compact && <Field label="Alert">
           <select className={inputCls} value={spec.trigger} onChange={(e) => set('trigger', e.target.value as WatchSpec['trigger'])}>
             {(Object.keys(TRIGGER_LABEL) as (keyof typeof TRIGGER_LABEL)[])
               .filter((k) => k !== 'per_object' || spec.kind === 'presence')
               .map((k) => <option key={k} value={k}>{TRIGGER_LABEL[k]}</option>)}
           </select>
-        </Field>
+        </Field>}
         <Field label="Severity">
           <select className={inputCls} value={spec.severity} onChange={(e) => set('severity', e.target.value as WatchSpec['severity'])}>
             <option value="info">Info</option>
@@ -96,7 +96,7 @@ export function PlanEditor({ spec, onChange }: { spec: WatchSpec; onChange: (s: 
       <Field label="Notification text">
         <input className={inputCls} value={spec.alert_message} onChange={(e) => set('alert_message', e.target.value)} />
       </Field>
-      <ActionsEditor actions={spec.actions ?? []} onChange={(a) => set('actions', a)} />
+      {!compact && <ActionsEditor actions={spec.actions ?? []} onChange={(a) => set('actions', a)} />}
     </div>
   )
 }

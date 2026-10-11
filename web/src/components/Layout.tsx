@@ -12,7 +12,7 @@ const NAV = [
   { to: '/metrics', label: 'Metrics', icon: BarChart3 },
   { to: '/events', label: 'Inbox', icon: Bell },
   { to: '/cameras', label: 'Cameras', icon: Camera },
-  { to: '/settings', label: 'Links', icon: Settings },
+  { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
 export function Logo({ className }: { className?: string }) {

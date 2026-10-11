@@ -112,6 +112,8 @@ class EventManager:
         crop_img = crop(frame, trig.crop_box, pad=0.05) if trig.crop_box else frame
         crop_path = d / "crop.jpg"
         cv2.imwrite(str(crop_path), crop_img, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        # the full frame, local only: if this alert is marked wrong, the next training run learns from it
+        cv2.imwrite(str(d / "frame.jpg"), frame, [cv2.IMWRITE_JPEG_QUALITY, 88])
         status = "verifying" if spec.verify_with_vlm else "confirmed"
         ev = self.db.update_event(eid, snapshot_path=rel(snap), crop_path=rel(crop_path), status=status)
         bus.publish("event", self._public(ev))

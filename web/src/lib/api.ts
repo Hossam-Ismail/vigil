@@ -134,6 +134,29 @@ export type Metrics = {
   reason?: string
   sources?: Record<string, number>
   compile?: { brain: string; ms: number; zone: ZoneProposal; warnings: string[] }
+  dataset?: DatasetInfo
+  kind?: 'detector' | 'classifier'
+  threshold?: number
+  eval?: { accuracy: number; precision: number; recall: number; f1: number; n: number; n_yes: number }
+}
+
+export type DatasetPlan = {
+  repo: string
+  license: string
+  kind: 'detector' | 'classifier'
+  target: string[]
+  other: string[]
+  classes_seen: string[]
+  url: string
+  previews: string[]
+}
+
+export type DatasetInfo = {
+  state: 'searching' | 'found' | 'none' | 'off' | 'too_small' | 'trained' | 'pretrained'
+  classes?: string[]
+  message?: string
+  plan?: DatasetPlan | null
+  data?: { images: number; train: number; valid: number; target_examples: number }
 }
 
 export type ZoneProposal = { method: string | null; candidates?: Box[]; chosen?: number; ms?: number; error?: string }

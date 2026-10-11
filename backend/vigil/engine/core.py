@@ -21,6 +21,7 @@ from ..config import settings
 from ..db import DB
 from ..learning.active import ActiveLearner
 from ..learning.builder import BuildJob
+from ..learning.finetune import TrainedModel
 from ..learning.heads import Head
 from ..learning.store import ModelStore
 from ..perception.detector import Detection, coco_class_for, get_coco, get_owl
@@ -31,6 +32,8 @@ from .events import EventManager
 from .runtime import WatchRuntime
 
 log = logging.getLogger("vigil.engine")
+
+MODEL_INTERVAL_S = 0.5  # a watch's own model runs twice a second
 
 
 class CameraAnalyzer:
@@ -69,10 +72,37 @@ class CameraAnalyzer:
                 log.exception("analysis tick failed on camera %s", self.cam.id)
                 time.sleep(1.0)
 
+    def _run_models(self, rts: list[WatchRuntime], frame: np.ndarray, ts: float) -> list[Detection]:
+        """Watches with their own fine-tuned model: the model's output is the answer, no zones or rules on top
+        (an area the user drew still limits where it looks)."""
+        shown: list[Detection] = []
+        for rt in rts:
+            if ts - rt.last_eval < MODEL_INTERVAL_S:
+                continue
+            m = rt.model
+            try:
+                if m.kind == "detector":
+                    label = rt.spec.locate_noun or (rt.spec.targets[0] if rt.spec.targets else rt.name)
+                    hits = [h for h in m.detect(frame) if h.conf >= m.threshold]
+                    found = [Detection(label, h.conf, h.box, "watch") for h in hits]
+                    shown += found
+                    trig = rt.step_objects(ts, found, None)
+                else:
+                    trig = rt.step_state(ts, p=m.proba(zone_crop(frame, rt.spec.zone)), threshold=m.threshold)
+            except Exception:  # noqa: BLE001
+                log.exception("model for watch %s failed", rt.id)
+                rt.last_eval = ts + 5
+                continue
+            if trig and rt.spec.alerts:
+                self.engine.events.create(trig, frame)
+        return shown
+
     def _tick(self, frame: np.ndarray, ts: float) -> None:
         t0 = time.perf_counter()
-        runtimes = [rt for rt in self.engine.runtimes_for(self.cam.id) if not rt.paused]
+        everyone = [rt for rt in self.engine.runtimes_for(self.cam.id) if not rt.paused]
         motion = self.gate.update(frame)
+        model_dets = self._run_models([rt for rt in everyone if rt.uses_model], frame, ts)
+        runtimes = [rt for rt in everyone if not rt.uses_model]
         dets: list[Detection] = []
         object_rts = [rt for rt in runtimes if not rt.is_state]
         if object_rts:
@@ -137,6 +167,8 @@ class CameraAnalyzer:
             trig = rt.step_objects(ts, mine, probs)
             if trig and rt.spec.alerts:
                 self.engine.events.create(trig, frame)
+        dets += model_dets
+        runtimes = everyone
         rows = [r for rt in runtimes for r in rt.pop_metric_rows()]
         if rows:
             self.engine.db.add_metric_rows(rows)
@@ -183,6 +215,7 @@ class Engine:
     def activate(self, watch: dict) -> WatchRuntime:
         head = self.store.load(watch)
         rt = WatchRuntime(watch, head)
+        rt.model = TrainedModel.load(watch["id"])
         # keep the cooldown across restarts so an ongoing condition does not re-alert on boot
         last = self.db.one("SELECT ts FROM events WHERE watch_id=? AND status != 'suppressed' ORDER BY ts DESC LIMIT 1",
                            (watch["id"],))

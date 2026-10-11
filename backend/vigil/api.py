@@ -791,10 +791,52 @@ def draft_watch(body: WatchDraftIn) -> dict:
         zone = None
     spec.zone = zone
     zinfo["ms"] = int((time.time() - t) * 1000)
+    from .learning import finetune as ft
+
+    coco = ft.pretrained_fits(spec) if settings.finetune else None
+    if settings.finetune:
+        spec.zone = None  # the watch's own model looks at the whole view; the user can still limit it to an area
+    if coco:
+        spec.target_question = ""
+    dataset = ({"state": "pretrained", "classes": coco} if coco else
+               {"state": "searching" if settings.finetune else "off"})
     w = S().db.add_watch(cam["id"], spec.name, prompt, spec.model_dump(), status="draft")
     S().db.update_watch(w["id"], metrics={"compile": {"brain": brain.label, "ms": compile_ms, "zone": zinfo,
-                                                      "warnings": warnings}})
+                                                      "warnings": warnings}, "dataset": dataset})
+    if settings.finetune and not coco:
+        threading.Thread(target=_find_dataset, args=(w["id"], spec, prompt, brain), daemon=True).start()
     return {**_watch_out(S().db.watch(w["id"])), "proposal": zinfo, "warnings": warnings}
+
+
+def _find_dataset(wid: int, spec: WatchSpec, prompt: str, brain) -> None:
+    """Look for the public data this watch will be trained on while the user reviews the plan."""
+    from .learning import finetune as ft
+
+    def note(**d) -> None:
+        w = S().db.watch(wid)
+        if w:
+            m = dict(w.get("metrics") or {})
+            m["dataset"] = {**(m.get("dataset") or {}), **d}
+            S().db.update_watch(wid, metrics=m)
+            bus.publish("dataset", {"watch_id": wid, **m["dataset"]})
+
+    try:
+        plan = ft.find(spec, prompt, wid, brain=brain if hasattr(brain, "text_json") else None,
+                       embedder=get_embedder(), say=lambda msg: note(message=msg))
+        note(state="found" if plan else "none", plan=plan.out() if plan else None)
+    except Exception as exc:  # noqa: BLE001
+        log.exception("dataset search failed for watch %s", wid)
+        note(state="none", message=f"search failed: {str(exc)[:100]}")
+
+
+@app.get("/api/watches/{wid}/dataset/{name}")
+def dataset_preview(wid: int, name: str) -> FileResponse:
+    from .learning import finetune as ft
+
+    p = (ft.root(wid) / "preview" / name).resolve()
+    if p.parent != (ft.root(wid) / "preview").resolve() or not p.exists():
+        raise HTTPException(404, "no such preview")
+    return FileResponse(p, media_type="image/jpeg")
 
 
 @app.get("/api/watches")

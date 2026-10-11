@@ -101,6 +101,94 @@ class BuildJob:
             self.db.update_watch(self.wid, status="error", status_detail=str(exc)[:300])
             bus.publish("build", {"watch_id": self.wid, "stage": "error", "progress": 1, "message": str(exc)[:300]})
 
+    def _build_finetuned(self, watch: dict, spec: WatchSpec, brain) -> bool:
+        """Find public data for this request, fine-tune the watch's own model on it, and go live.
+
+        Returns False (and the older camera-labeled head is built instead) when no usable public dataset exists.
+        """
+        from . import finetune as ft
+
+        coco = ft.pretrained_fits(spec)
+        if coco:
+            # common objects: the base detector, trained on COCO's 118k public images, is the model for this
+            spec.target_question = ""
+            self.db.update_watch(self.wid, spec=spec.model_dump())
+            (ft.root(self.wid) / "model.json").unlink(missing_ok=True)
+            metrics = {"mode": "pretrained", "dataset": {"state": "pretrained", "classes": coco},
+                       "trained_at": time.time()}
+            self._merge_metrics(**metrics)
+            detail = (f"uses Vigil's detector trained on COCO (118k public images), where {', '.join(coco)} "
+                      "is one of the 80 classes it already knows; ready instantly")
+            self.db.update_watch(self.wid, status="active", status_detail=detail)
+            bus.publish("build", {"watch_id": self.wid, "stage": "done", "progress": 1.0, "message": detail,
+                                  "metrics": metrics})
+            self.on_done(self.wid)
+            return True
+
+        found = (watch.get("metrics") or {}).get("dataset") or {}
+        plan = ft.Plan(**found["plan"]) if found.get("plan") else None
+        if plan is None:
+            self._progress("data", 0.02, "looking for public training data")
+            plan = ft.find(spec, watch["prompt"], self.wid, brain=brain, embedder=self.store.embedder,
+                           say=lambda m: self._progress("data", 0.03, m))
+        if plan is None or self.cancelled.is_set():
+            self._merge_metrics(dataset={"state": "none"})
+            self._progress("collect", 0.05, "no public dataset fits this request; learning from this camera instead")
+            return False
+        self._merge_metrics(dataset={"state": "found", "plan": plan.out()})
+        n_max = settings.finetune_images
+
+        def data_progress(m: str) -> None:
+            got = int(m.split()[1]) if m.startswith("downloaded ") else 0
+            self._progress("data", 0.05 + 0.2 * min(1.0, got / n_max), m)
+
+        self._progress("data", 0.05, f"downloading up to {n_max} images from {plan.repo}")
+        info = ft.write_dataset(plan, self.wid, max_images=n_max, extra_backgrounds=self._false_alarm_frames(),
+                                say=data_progress)
+        if info["target_examples"] < ft.MIN_TARGET:
+            self._merge_metrics(dataset={"state": "too_small", "plan": plan.out(), "data": info})
+            self._progress("collect", 0.05, f"only {info['target_examples']} examples in {plan.repo}; "
+                                            "learning from this camera instead")
+            return False
+        self._progress("train", 0.25, f"training a {plan.kind} on {info['train']} images "
+                                      f"({info['target_examples']} examples of what you asked for)", data=info)
+
+        def on_progress(p: dict) -> None:
+            if p.get("stage") == "evaluate":
+                self._progress("evaluate", 0.88 + 0.1 * p.get("progress", 0), p.get("message", ""))
+            else:
+                self._progress("train", 0.25 + 0.6 * p.get("progress", 0), p.get("message", ""))
+
+        res = ft.train(self.wid, plan.kind, epochs=settings.finetune_epochs, on_progress=on_progress,
+                       cancelled=self.cancelled)
+        ev = res.get("eval") or {}
+        metrics = {"mode": "finetuned", "kind": plan.kind, "threshold": res.get("threshold"),
+                   "dataset": {"state": "trained", "plan": plan.out(), "data": info}, "eval": ev,
+                   "trained_at": time.time(), "n": info["train"], "n_pos": info["target_examples"]}
+        self._merge_metrics(**metrics)
+        detail = (f"trained on {info['images']} images from {plan.repo}; on {ev.get('n', 0)} held-out images it "
+                  f"was right {round(100 * ev.get('accuracy', 0))}% of the time (F1 {ev.get('f1', 0):.2f})")
+        self.db.update_watch(self.wid, status="active", status_detail=detail)
+        bus.publish("build", {"watch_id": self.wid, "stage": "done", "progress": 1.0, "message": detail,
+                              "metrics": metrics})
+        self.on_done(self.wid)
+        return True
+
+    def _merge_metrics(self, **fields) -> None:
+        w = self.db.watch(self.wid) or {}
+        self.db.update_watch(self.wid, metrics={**(w.get("metrics") or {}), **fields})
+
+    def _false_alarm_frames(self) -> list[np.ndarray]:
+        """Frames from alerts someone marked wrong: next training run learns there is nothing to find there."""
+        out = []
+        for e in self.db.all("SELECT id FROM events WHERE watch_id=? AND feedback='false_alarm' ORDER BY ts DESC "
+                             "LIMIT 40", (self.wid,)):
+            p = settings.data_dir / "media" / "events" / str(e["id"]) / "frame.jpg"
+            img = cv2.imread(str(p)) if p.exists() else None
+            if img is not None:
+                out.append(img)
+        return out
+
     def _collect_frames(self) -> list[tuple[float, np.ndarray, str]]:
         frames: list[tuple[float, np.ndarray, str]] = []
         hist = self.cam.history(limit=600)
@@ -156,6 +244,8 @@ class BuildJob:
             return
         spec = WatchSpec.model_validate(watch["spec"])
         brain = get_brain()
+        if settings.finetune and self._build_finetuned(watch, spec, brain):
+            return
         self._progress("collect", 0.0, "gathering frames")
         frames = self._collect_frames()
         if self.cancelled.is_set():

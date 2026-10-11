@@ -6,8 +6,8 @@ import { Page } from '../components/Layout'
 import { SampleThumb } from '../components/SampleThumb'
 import { Button, Card, cx, KindBadge, Spinner } from '../components/ui'
 import { ZoneEditor } from '../components/ZoneEditor'
-import { PlanEditor } from '../components/PlanEditor'
-import { api, type ApiError, type Camera, type Health, type Metrics, type Watch, type PolicyRefusal, type WatchSpec } from '../lib/api'
+import { WatchPlan } from '../components/WatchPlan'
+import { api, type ApiError, type Camera, type Health, type Metrics, type Watch, type PolicyRefusal, type WatchSpec, type DatasetInfo } from '../lib/api'
 import { pct } from '../lib/format'
 import { useFetch, useNow } from '../lib/hooks'
 import { clearBuild, useLive } from '../lib/live'
@@ -21,13 +21,19 @@ const ZONE_METHOD: Record<string, string> = {
   error: 'I could not locate the region automatically.',
 }
 
-const STAGES = [
+const CAMERA_STAGES = [
   { key: 'collect', label: 'Collect frames', hint: 'History + a short live capture' },
   { key: 'candidates', label: 'Find candidates', hint: 'Crops of the region or objects' },
   { key: 'label', label: 'Auto-label', hint: 'The brain answers your question' },
   { key: 'train', label: 'Train model', hint: 'A small head on vision embeddings' },
   { key: 'done', label: 'Live', hint: 'Running on every frame' },
-] as const
+]
+const FINETUNE_STAGES = [
+  { key: 'data', label: 'Get public training data', hint: 'Images labeled for exactly this' },
+  { key: 'train', label: 'Fine-tune the model', hint: 'On this Mac, a few minutes' },
+  { key: 'evaluate', label: 'Test it', hint: 'On images it never saw' },
+  { key: 'done', label: 'Live', hint: 'Its own output decides the alert' },
+]
 
 export function ModelSummary({ m }: { m: Metrics }) {
   const trained = m.mode === 'trained'
@@ -94,7 +100,9 @@ function CompileStatus() {
 function BuildView({ watch, cam }: { watch: Watch; cam?: Camera }) {
   const build = useLive((s) => s.builds[watch.id])
   const samples = useLive((s) => s.buildSamples[watch.id]) ?? []
-  const stage = build?.stage ?? 'collect'
+  const stage = build?.stage ?? 'data'
+  const cameraPath = ['collect', 'candidates', 'label'].includes(stage) || (stage === 'train' && !!samples.length)
+  const STAGES = cameraPath ? CAMERA_STAGES : FINETUNE_STAGES
   const idx = STAGES.findIndex((s) => s.key === stage)
   const done = stage === 'done'
   const failed = stage === 'error'
@@ -106,6 +114,16 @@ function BuildView({ watch, cam }: { watch: Watch; cam?: Camera }) {
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
       <div className="flex flex-col gap-4">
         <CameraView cameraId={watch.camera_id} aspect={cam?.width && cam.height ? cam.width / cam.height : 16 / 9} watches={[watch]} showDetections={false} fps={4} />
+        {!cameraPath && watch.metrics?.dataset?.plan ? (
+          <Card className="p-4">
+            <div className="mb-3 text-[13px] font-semibold">Learning from {watch.metrics.dataset.plan.repo}</div>
+            <div className="grid grid-cols-3 gap-2">
+              {watch.metrics.dataset.plan.previews.map((n) => (
+                <img key={n} src={`/api/watches/${watch.id}/dataset/${n}`} alt="" className="aspect-[4/3] w-full rounded-md object-cover" />
+              ))}
+            </div>
+          </Card>
+        ) : (
         <Card className="p-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="text-[13px] font-semibold">Training examples</div>
@@ -127,10 +145,11 @@ function BuildView({ watch, cam }: { watch: Watch; cam?: Camera }) {
             </div>
           )}
         </Card>
+        )}
       </div>
       <Card className="p-5 h-fit">
         <div className="flex items-center gap-2 text-[12px] uppercase tracking-wide text-muted">
-          <Wand2 className="size-3.5" /> Building your detector
+          <Wand2 className="size-3.5" /> Training your model
         </div>
         <div className="mt-1 text-[17px] font-semibold">{watch.name}</div>
         <ol className="mt-5 flex flex-col">
@@ -163,7 +182,17 @@ function BuildView({ watch, cam }: { watch: Watch; cam?: Camera }) {
         <div className="mt-5 h-1 w-full overflow-hidden rounded-full bg-panel-3">
           <div className={cx('h-full rounded-full transition-[width] duration-500', failed ? 'bg-alert' : 'bg-accent')} style={{ width: `${(build?.progress ?? 0.02) * 100}%` }} />
         </div>
-        {done && build?.metrics && (
+        {done && build?.metrics?.mode === 'finetuned' && build.metrics.eval && (
+          <div className="mt-5 slide-in">
+            <div className="grid grid-cols-3 gap-3">
+              <Stat label="Held-out accuracy" value={pct(build.metrics.eval.accuracy)} sub={`${build.metrics.eval.n} images it never saw`} />
+              <Stat label="Precision" value={pct(build.metrics.eval.precision)} sub="alerts that are right" />
+              <Stat label="Recall" value={pct(build.metrics.eval.recall)} sub="events it catches" />
+            </div>
+            <div className="mt-3 text-[12.5px] text-muted">{build.message}</div>
+          </div>
+        )}
+        {done && build?.metrics && build.metrics.mode !== 'finetuned' && (
           <div className="mt-5 slide-in">
             <ModelSummary m={build.metrics} />
             <div className="mt-3 text-[12.5px] text-muted">{build.message}</div>
@@ -259,9 +288,21 @@ export function NewWatch() {
     nav('/')
   }
 
-  const candidates = useMemo(() => watch?.proposal?.candidates ?? [], [watch])
-  const method = watch?.proposal?.method ?? null
-  const compileInfo = watch?.metrics?.compile
+  // the public dataset is found in the background while the plan is reviewed
+  const [dataset, setDataset] = useState<DatasetInfo | undefined>(undefined)
+  const [area, setArea] = useState(false)
+  useEffect(() => {
+    if (!watch) return
+    setDataset(watch.metrics?.dataset)
+    if (phase !== 'review') return
+    const t = setInterval(async () => {
+      const w = await api.get<Watch>(`/api/watches/${watch.id}`).catch(() => null)
+      const d = w?.metrics?.dataset
+      if (d) setDataset(d)
+      if (d && d.state !== 'searching') clearInterval(t)
+    }, 1500)
+    return () => clearInterval(t)
+  }, [watch, phase])
 
   return (
     <Page
@@ -322,26 +363,29 @@ export function NewWatch() {
       {phase === 'review' && watch && spec && (
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
           <div className="flex flex-col gap-3">
-            <ZoneEditor cameraId={cameraId} zone={spec.zone} onChange={(z) => setSpec({ ...spec, zone: z })} aspect={aspect} candidates={candidates}
-              line={spec.line} crossing={spec.crossing} onLineChange={(l) => setSpec({ ...spec, line: l })} />
+            {area || spec.zone || spec.crossing !== 'none' ? (
+              <ZoneEditor cameraId={cameraId} zone={spec.zone} onChange={(z) => setSpec({ ...spec, zone: z })} aspect={aspect} candidates={[]}
+                line={spec.line} crossing={spec.crossing} onLineChange={(l) => setSpec({ ...spec, line: l })} />
+            ) : (
+              <CameraView cameraId={cameraId} aspect={aspect} showDetections={false} fps={4} />
+            )}
             <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-muted">
               <Crosshair className="size-3.5 text-accent" />
-              <span className="flex-1 min-w-[200px]">
+              <span className="min-w-[200px] flex-1">
                 {spec.crossing !== 'none'
-                  ? 'Alerts fire when someone crosses this line in the arrow’s direction. Drag the ends to move it, or draw a new line.'
-                  : <>{method ? ZONE_METHOD[method] ?? method : 'Draw the region to watch.'} Drag on the image to redraw{candidates.length > 1 ? ', or click a dashed box' : ''}.</>}
+                  ? 'Alerts fire when something crosses this line in the arrow’s direction. Drag the ends to move it.'
+                  : spec.zone ? 'Only this area is checked. Drag on the image to redraw it.' : 'The model checks the whole view.'}
               </span>
-              <Button size="sm" variant="ghost" icon={<Maximize className="size-3.5" />} onClick={() => setSpec({ ...spec, zone: null })}>
-                Whole frame
-              </Button>
+              {spec.zone || area ? (
+                <Button size="sm" variant="ghost" icon={<Maximize className="size-3.5" />} onClick={() => { setArea(false); setSpec({ ...spec, zone: null }) }}>Whole view</Button>
+              ) : (
+                <Button size="sm" variant="ghost" icon={<Crosshair className="size-3.5" />} onClick={() => setArea(true)}>Limit to an area</Button>
+              )}
             </div>
           </div>
           <Card className="p-5">
-            <div className="flex items-center gap-2">
-              <KindBadge kind={spec.kind} />
-              {compileInfo && <span className="text-[12px] text-muted">compiled by {compileInfo.brain} in {(compileInfo.ms / 1000).toFixed(1)}s</span>}
-            </div>
-            <p className="mt-2 text-[14px] leading-6 text-ink-2">{spec.summary}</p>
+            <div className="text-[18px] font-semibold leading-snug">{spec.name}</div>
+            <p className="mt-1.5 text-[13.5px] leading-6 text-ink-2">{spec.summary}</p>
             {[...(spec.clarifications ?? []), ...(watch.warnings ?? [])].length > 0 && (
               <div className="mt-3 rounded-lg border border-warn/40 bg-warn-soft px-3 py-2 text-[12.5px] text-ink-2">
                 {[...(spec.clarifications ?? []), ...(watch.warnings ?? [])].map((c) => (
@@ -350,10 +394,10 @@ export function NewWatch() {
               </div>
             )}
             <div className="my-5 h-px bg-line" />
-            <PlanEditor spec={spec} onChange={setSpec} />
+            <WatchPlan watchId={watch.id} spec={spec} onChange={setSpec} cam={cam} dataset={dataset} />
             <div className="mt-6 flex items-center gap-2">
               <Button variant="primary" loading={busy} onClick={startBuild} icon={<Wand2 className="size-4" />}>
-                Build &amp; start watching
+                Train &amp; start watching
               </Button>
               <Button variant="ghost" onClick={discard}>Discard</Button>
             </div>

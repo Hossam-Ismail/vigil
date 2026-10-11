@@ -7,10 +7,35 @@ import { Page } from '../components/Layout'
 import { PromptBar } from '../components/PromptBar'
 import { Button, Card, Empty, SectionTitle, Toggle } from '../components/ui'
 import { WatchChip } from '../components/WatchChip'
-import { api, type Camera, type VEvent, type Watch } from '../lib/api'
+import { api, type Camera, type Health, type VEvent, type Watch } from '../lib/api'
 import { useFetch, useInterval } from '../lib/hooks'
 import { useLive } from '../lib/live'
 import { CameraStatusDot } from './Live'
+
+/** How to turn a phone into this camera. On a phone, "localhost" is the phone itself, and phone browsers only
+ *  allow the camera on HTTPS, so the link is Vigil's HTTPS address on the Wi-Fi. */
+function PhoneSetup({ id }: { id: number }) {
+  const health = useFetch<Health>('/api/health')
+  const local = ['localhost', '127.0.0.1'].includes(location.hostname)
+  const base = local ? health.data?.lan_url : location.origin
+  const link = base ? `${base}/push/${id}` : null
+  return (
+    <Card className="p-4 text-[12.5px] text-muted">
+      <SectionTitle>Use a phone as this camera</SectionTitle>
+      {link ? (
+        <ol className="flex list-decimal flex-col gap-1.5 pl-4">
+          <li>Join the same Wi-Fi as this computer.</li>
+          <li>On the phone, open <span className="num select-all break-all text-ink">{link}</span></li>
+          {local && <li>Safari says the connection isn't private (Vigil's own certificate): tap <em>Show Details</em>, then <em>visit this website</em>.</li>}
+          <li>Sign in, tap <em>Start streaming</em> and allow the camera.</li>
+          <li>Keep the screen on and the phone plugged in.</li>
+        </ol>
+      ) : (
+        <div>Vigil isn't reachable on the Wi-Fi from here. Start it with HTTPS on the network (VIGIL_LAN_HTTPS_PORT) or open Vigil from its network address.</div>
+      )}
+    </Card>
+  )
+}
 
 function DemoControls({ cam, onChange }: { cam: Camera; onChange: () => void }) {
   const demo = cam.demo!
@@ -81,11 +106,7 @@ export function CameraDetail() {
             </div>
           </Card>
           {cam.demo && <DemoControls cam={cam} onChange={() => cams.reload()} />}
-          {cam.kind === 'browser' && (
-            <Card className="p-4 text-[12.5px] text-muted">
-              Open <span className="num text-ink">{location.origin}/push/{cam.id}</span> on the phone or laptop you want to use as this camera, then tap <em>Start streaming</em>. Keep the screen on and the device plugged in.
-            </Card>
-          )}
+          {cam.kind === 'browser' && <PhoneSetup id={cam.id} />}
         </div>
       </div>
       <div className="mt-8">

@@ -119,7 +119,7 @@ function AddCamera({ onDone, onCancel }: { onDone: (c: Camera) => void; onCancel
           </Field>
         )}
         {kind === 'browser' && (
-          <div className="text-[12.5px] text-muted sm:pt-6">After adding, open the camera page on the phone or laptop you want to use and tap <em>Start streaming</em>. Phones need HTTPS (or localhost) for camera access.</div>
+          <div className="text-[12.5px] text-muted sm:pt-6">After adding, open the camera page on the phone or laptop you want to use and tap <em>Start streaming</em>. The camera page shows the exact link to open on the phone.</div>
         )}
       </div>
       {kind === 'rtsp' && scan && (

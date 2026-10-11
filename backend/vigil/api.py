@@ -51,6 +51,8 @@ from .schemas import (
 
 log = logging.getLogger("vigil.api")
 
+from .lan import lan_url  # noqa: E402
+
 WEB_DIST = Path(__file__).resolve().parents[2] / "web" / "dist"
 
 
@@ -393,6 +395,7 @@ def health() -> dict:
         "watches_active": sum(1 for rt in S().engine.runtimes.values() if not rt.paused),
         "embed_model": settings.embed_model,
         "detectors": {"coco": f"RF-DETR {settings.coco_model}", "open_vocab": settings.open_vocab_model},
+        "lan_url": lan_url(),
     }
 
 

@@ -262,6 +262,7 @@ export type Health = {
   watches_active: number
   embed_model: string
   detectors: { coco: string; open_vocab: string }
+  lan_url?: string | null // HTTPS address on the Wi-Fi, for phones
 }
 
 export type Channel = {

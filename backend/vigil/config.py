@@ -31,6 +31,8 @@ class Settings:
     )
     host: str = field(default_factory=lambda: _env("VIGIL_HOST", "127.0.0.1"))
     port: int = field(default_factory=lambda: int(_env("VIGIL_PORT", "8765")))
+    # HTTPS on the local network so a phone's browser can stream its camera (0 turns it off)
+    lan_https_port: int = field(default_factory=lambda: int(_env("VIGIL_LAN_HTTPS_PORT", "8443")))
 
     # Perception
     embed_model: str = field(default_factory=lambda: _env("VIGIL_EMBED_MODEL", "google/siglip2-base-patch16-224"))

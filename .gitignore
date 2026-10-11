@@ -24,3 +24,5 @@ brand/pexels/
 brand/cover/
 deploy/vercel/public/
 deploy/vercel/.vercel/
+deploy/vercel/vercel.json
+devpost-gallery/

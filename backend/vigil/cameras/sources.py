@@ -28,6 +28,44 @@ def _fit(frame: np.ndarray, max_w: int = MAX_WIDTH) -> np.ndarray:
     return cv2.resize(frame, (max_w, int(round(h * scale))), interpolation=cv2.INTER_AREA)
 
 
+
+# Camera readers run as ffmpeg child processes. One waiting on a camera that never delivers (a phone that isn't
+# connected) ignores the end of its pipe, so it would outlive a restart of Vigil and keep the camera busy.
+CAPTURE_TAG = "vigil-capture"
+_children: set[subprocess.Popen] = set()
+
+
+def stop_children() -> None:
+    """Stop this process's camera readers (on shutdown)."""
+    for p in list(_children):
+        try:
+            p.kill()
+        except OSError:
+            pass
+    _children.clear()
+
+
+def reap_orphans() -> int:
+    """Stop camera readers left behind by an earlier run of Vigil (on start-up)."""
+    import os
+    import signal
+
+    try:
+        out = subprocess.run(["ps", "-Ao", "pid,ppid,args"], capture_output=True, text=True, timeout=5).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return 0
+    n = 0
+    for line in out.splitlines()[1:]:
+        parts = line.split(None, 2)
+        if len(parts) == 3 and parts[1] == "1" and "ffmpeg" in parts[2] and CAPTURE_TAG in parts[2]:
+            try:
+                os.kill(int(parts[0]), signal.SIGKILL)
+                n += 1
+            except OSError:
+                pass
+    return n
+
+
 class FrameSource:
     live = True
 
@@ -147,8 +185,10 @@ class WebcamSource(FrameSource):
         for size in (["-video_size", "1280x720"], []):
             proc = subprocess.Popen(
                 ["ffmpeg", "-hide_banner", "-loglevel", "error", "-f", "avfoundation", "-framerate", "30", *size,
-                 "-i", f"{name}:none", "-vf", vf, "-r", "15", "-f", "rawvideo", "-pix_fmt", "bgr24", "-"],
+                 "-i", f"{name}:none", "-vf", vf, "-r", "15", "-metadata", f"comment={CAPTURE_TAG}",
+                 "-f", "rawvideo", "-pix_fmt", "bgr24", "-"],
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+            _children.add(proc)
             n = w * h * 3
             got = False
             try:
@@ -161,6 +201,7 @@ class WebcamSource(FrameSource):
             finally:
                 proc.kill()
                 proc.wait(timeout=5)
+                _children.discard(proc)
             if got:
                 return
 

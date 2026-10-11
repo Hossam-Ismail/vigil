@@ -13,7 +13,19 @@ import socket
 from .config import settings
 
 
+_ip_cache: dict = {"at": 0.0, "ip": None}
+
+
 def lan_ip() -> str | None:
+    """This computer's address on the Wi-Fi / Ethernet, looked up at most once a minute."""
+    import time
+
+    if time.time() - _ip_cache["at"] > 60:
+        _ip_cache.update(at=time.time(), ip=_lookup_ip())
+    return _ip_cache["ip"]
+
+
+def _lookup_ip() -> str | None:
     """This computer's address on the Wi-Fi / Ethernet (not a VPN tunnel); no packets are sent."""
     import subprocess
     import sys

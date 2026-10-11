@@ -34,6 +34,13 @@ def main() -> None:
     from .config import settings
 
     settings.ensure_dirs()
+    import atexit
+
+    from .cameras.sources import reap_orphans, stop_children
+
+    if (n := reap_orphans()):
+        logging.getLogger("vigil").info("stopped %d camera reader(s) left over from an earlier run", n)
+    atexit.register(stop_children)
     servers = [uvicorn.Server(uvicorn.Config("vigil.api:app", host=settings.host, port=settings.port,
                                              log_level="info", access_log=False))]
     if settings.lan_https_port:

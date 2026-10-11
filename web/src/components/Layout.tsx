@@ -1,4 +1,7 @@
 import { BarChart3, Bell, Brain, Camera, Eye, LayoutGrid, Settings, X, FlaskConical } from 'lucide-react'
+import { useAuth, signOut } from '../lib/auth'
+import { BetaPill } from '../pages/Welcome'
+import { FeedbackButton } from './Feedback'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api, media, type Health } from '../lib/api'
@@ -86,6 +89,7 @@ export function Layout() {
         <NavLink to="/" className="flex items-center gap-2.5 text-ink">
           <Logo className="size-8" />
           <span className="text-[18px] font-semibold tracking-[0.3em]">VIGIL</span>
+          <BetaPill />
         </NavLink>
         <nav aria-label="Main" className="order-3 flex w-full gap-1 overflow-x-auto md:order-none md:w-auto">
           {NAV.map(({ to, label, end }) => (
@@ -111,12 +115,39 @@ export function Layout() {
           <NavLink to="/new" className="hud flex h-9 items-center border border-accent px-3 text-accent hover:bg-accent hover:text-accent-ink">
             + NEW WATCH
           </NavLink>
+          <AccountMenu />
         </div>
       </header>
       <main className="min-h-0 flex-1 overflow-y-auto">
         <Outlet />
       </main>
       <Toasts />
+      <FeedbackButton />
+    </div>
+  )
+}
+
+function AccountMenu() {
+  const { me } = useAuth()
+  const [open, setOpen] = useState(false)
+  if (!me) return null
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen((o) => !o)} aria-label="Account"
+        className="flex size-9 items-center justify-center rounded-full border border-line bg-panel-2 text-[13px] font-semibold uppercase text-ink-2 hover:border-line-2">
+        {me.email[0]}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-11 z-50 w-64 rounded-xl border border-line bg-panel p-3 text-[13px] shadow-2xl" onMouseLeave={() => setOpen(false)}>
+          <div className="truncate font-medium">{me.email}</div>
+          <div className="mt-0.5 text-[12px] text-muted">
+            {me.profile.use ? `${me.profile.use}${me.profile.business_type ? ` · ${me.profile.business_type}` : ''}` : ''} · AI key {me.ai_key_hint}
+          </div>
+          <div className="my-2 h-px bg-line" />
+          <NavLink to="/settings" onClick={() => setOpen(false)} className="block rounded-md px-2 py-1.5 text-ink-2 hover:bg-panel-2 hover:text-ink">Account &amp; settings</NavLink>
+          <button onClick={signOut} className="block w-full rounded-md px-2 py-1.5 text-left text-ink-2 hover:bg-panel-2 hover:text-ink">Sign out</button>
+        </div>
+      )}
     </div>
   )
 }

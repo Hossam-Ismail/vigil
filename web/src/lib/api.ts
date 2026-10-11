@@ -319,6 +319,9 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
       if (data.detail && data.detail.code === 'policy') {
         policy = data.detail as PolicyRefusal
         msg = policy.reason
+      } else if (data.detail && (data.detail.code === 'signin' || data.detail.code === 'onboarding')) {
+        msg = data.detail.message
+        window.dispatchEvent(new Event('vigil:auth'))
       } else {
         msg = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)
       }

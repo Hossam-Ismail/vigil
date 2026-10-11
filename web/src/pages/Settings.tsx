@@ -4,6 +4,8 @@ import { Page } from '../components/Layout'
 import { Button, Card, cx, Field, inputCls, SectionTitle, Toggle } from '../components/ui'
 import { api, type ActionResult, type Channel, type Health, type IntegrationsStatus, type Privacy, type Settings as SettingsT } from '../lib/api'
 import { useFetch, useInterval } from '../lib/hooks'
+import { useAuth, signOut, type Me } from '../lib/auth'
+import { BetaPill } from './Welcome'
 
 const BRAIN_INFO: Record<string, { title: string; body: string }> = {
   auto: { title: 'Automatic', body: 'Use Claude when an API key is set, otherwise the local model, otherwise the built-in fallback.' },
@@ -73,6 +75,7 @@ export function Settings() {
 
   return (
     <Page title="Settings">
+      <AccountPanel />
       <SectionTitle>Brain</SectionTitle>
       <div className="mb-2 text-[13px] text-muted">
         The brain understands your requests, labels training examples and double-checks alerts. The fast per-watch models always run locally.
@@ -378,6 +381,72 @@ function Integrations({ settings, onSaved }: { settings: SettingsT | null | unde
           {result.hubspot && <div className="mt-1.5 text-[12px] text-muted">{result.hubspot}</div>}
         </Card>
       </div>
+    </div>
+  )
+}
+
+
+type FeedbackRow = { id: number; ts: number; rating: number | null; kind: string; text: string; page: string; email: string | null }
+
+/** The signed-in account, its AI key, and every piece of beta feedback the team has received. */
+function AccountPanel() {
+  const { me, setMe } = useAuth()
+  const fb = useFetch<FeedbackRow[]>('/api/feedback')
+  const [key, setKey] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+  if (!me) return null
+  const replaceKey = async () => {
+    setBusy(true)
+    setMsg(null)
+    try {
+      const r = await api.post<{ user: Me }>('/api/auth/ai-key', { provider: 'anthropic', key, use_cloud: true })
+      setMe(r.user)
+      setKey('')
+      setMsg('Key checked and saved.')
+    } catch (e) {
+      setMsg((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  const p = me.profile
+  return (
+    <div className="mb-10">
+      <SectionTitle>Account</SectionTitle>
+      <div className="grid gap-2 lg:grid-cols-2">
+        <Card className="p-4 text-[13px]">
+          <div className="flex items-center gap-2 font-semibold">{me.email} <BetaPill /></div>
+          <div className="mt-2 grid grid-cols-[110px_1fr] gap-y-1 text-[12.5px]">
+            <span className="text-muted">Using Vigil for</span><span>{p.use}{p.business_type ? ` · ${p.business_type}` : ''}{p.org ? ` · ${p.org}` : ''}</span>
+            <span className="text-muted">Cameras</span><span>{p.cameras || '—'}</span>
+            <span className="text-muted">Watching for</span><span className="text-ink-2">{p.goals}</span>
+          </div>
+          <Button size="sm" variant="ghost" className="mt-3" onClick={signOut}>Sign out</Button>
+        </Card>
+        <Card className="p-4 text-[13px]">
+          <div className="font-semibold">Anthropic API key <span className="font-normal text-muted">{me.ai_key_hint}</span></div>
+          <div className="mt-1 text-[12px] text-muted">Checked with Anthropic before it is saved. Stored only on this computer.</div>
+          <div className="mt-3 flex gap-2">
+            <input className={cx(inputCls, 'font-mono')} type="password" autoComplete="off" placeholder="Replace with sk-ant-…" value={key} onChange={(e) => setKey(e.target.value.trim())} />
+            <Button size="sm" variant="primary" loading={busy} disabled={key.length < 20} onClick={replaceKey}>Replace</Button>
+          </div>
+          {msg && <div className="mt-2 text-[12px] text-muted">{msg}</div>}
+        </Card>
+      </div>
+      <SectionTitle>Beta feedback</SectionTitle>
+      <Card className="divide-y divide-line">
+        {(fb.data ?? []).length === 0 && <div className="p-4 text-[13px] text-muted">No feedback yet. The “Beta feedback” button is at the bottom left of every page.</div>}
+        {(fb.data ?? []).map((f) => (
+          <div key={f.id} className="flex gap-3 p-3 text-[13px]">
+            <div className="w-16 shrink-0 text-accent">{f.rating ? '★'.repeat(f.rating) : '—'}</div>
+            <div className="min-w-0 flex-1">
+              <div className="text-ink">{f.text || <span className="text-muted">(rating only)</span>}</div>
+              <div className="mt-0.5 text-[11.5px] text-muted">{f.kind} · {f.email ?? 'unknown'} · {f.page} · {new Date(f.ts * 1000).toLocaleString()}</div>
+            </div>
+          </div>
+        ))}
+      </Card>
     </div>
   )
 }

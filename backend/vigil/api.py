@@ -12,7 +12,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from fastapi import Body, FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -26,7 +26,8 @@ from .config import settings
 from .db import DB
 from .engine.core import Engine
 from .engine.bridge import BridgeSupervisor
-from . import agent, privacy
+from . import agent, mail, privacy
+from .accounts import Accounts, AuthError, use_key
 from .safety import Verdict, check_spec, check_text
 from .engine.actions import ActionRunner, normalize_handle
 from .engine.events import EventManager
@@ -64,6 +65,7 @@ class App:
         self.actions = ActionRunner(self.db)
         self.bridge = BridgeSupervisor(self.actions.bridge_url)
         self.janitor = privacy.Janitor(self.db)
+        self.accounts = Accounts(self.db)
         self.events = EventManager(self.db, self.hub, self.store, self.notifier, self.actions)
         self.learner = ActiveLearner(self.db, self.store)
         self.engine = Engine(self.db, self.hub, self.store, self.events, self.learner)
@@ -78,6 +80,7 @@ class App:
                 if platform.system() == "Darwin" else []
             self.db.set_kv("channels", chans)
         privacy.apply(self.db.get_kv("privacy"))
+        use_key(self.accounts.latest_key())  # the brain uses the most recently checked account key
         pref = self.db.get_kv("brain")
         if pref:
             try:
@@ -125,6 +128,140 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Vigil", version=__version__, lifespan=lifespan)
+
+# ---------------------------------------------------------------------------------------------
+# accounts: nothing but sign-in and onboarding works until a verified .edu account with a checked AI key exists
+
+COOKIE = "vigil_session"
+OPEN_PATHS = ("/api/auth/", "/api/health", "/api/imessage/inbound")
+# the "connect a camera" onboarding step needs these before the account is fully set up
+CAMERA_STEP_PATHS = ("/api/cameras", "/api/webcams", "/api/discover")
+
+
+@app.middleware("http")
+async def require_account(request: Request, call_next):
+    path = request.url.path
+    gated = path.startswith("/api/") or path.startswith("/media/")
+    if not gated or path.startswith(OPEN_PATHS) or app_state is None:
+        return await call_next(request)
+    user = S().accounts.session_user(request.cookies.get(COOKIE))
+    if user is None:
+        return JSONResponse({"detail": {"code": "signin", "message": "Sign in to use Vigil."}}, status_code=401)
+    step = S().accounts.next_step(user)
+    if step != "ready" and not (step == "camera" and path.startswith(CAMERA_STEP_PATHS)):
+        return JSONResponse({"detail": {"code": "onboarding", "step": step,
+                                        "message": "Finish setting up your account first."}}, status_code=403)
+    request.state.user = user
+    return await call_next(request)
+
+
+def _me(request: Request) -> dict:
+    user = S().accounts.session_user(request.cookies.get(COOKIE))
+    if user is None:
+        raise HTTPException(401, "Sign in first.")
+    return user
+
+
+def _auth_call(fn, *args):
+    try:
+        return fn(*args)
+    except AuthError as exc:
+        raise HTTPException(exc.status, exc.message) from exc
+
+
+def _with_session(user: dict, extra: dict | None = None) -> JSONResponse:
+    resp = JSONResponse({"user": S().accounts.public(user), **(extra or {})})
+    resp.set_cookie(COOKIE, S().accounts.new_session(user["id"]), max_age=30 * 86400, httponly=True,
+                    samesite="lax", path="/")
+    return resp
+
+
+@app.get("/api/auth/me")
+def auth_me(request: Request) -> dict:
+    user = S().accounts.session_user(request.cookies.get(COOKIE))
+    return {"user": S().accounts.public(user) if user else None, "mail": mail.configured(), "beta": True}
+
+
+@app.post("/api/auth/signup")
+def auth_signup(email: str = Body(...), password: str = Body(...), consent: bool = Body(False)) -> JSONResponse:
+    user = _auth_call(S().accounts.sign_up, email, password, consent)
+    try:
+        sent = S().accounts.send_code(user)
+    except AuthError:
+        sent = {"delivery": "throttled"}
+    except Exception as exc:  # noqa: BLE001
+        log.exception("could not send the verification email")
+        sent = {"delivery": "failed", "error": str(exc)[:160]}
+    return _with_session(user, sent)
+
+
+@app.post("/api/auth/login")
+def auth_login(email: str = Body(...), password: str = Body(...)) -> JSONResponse:
+    return _with_session(_auth_call(S().accounts.sign_in, email, password))
+
+
+@app.post("/api/auth/logout")
+def auth_logout(request: Request) -> JSONResponse:
+    S().accounts.end_session(request.cookies.get(COOKIE))
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie(COOKIE, path="/")
+    return resp
+
+
+@app.post("/api/auth/resend")
+def auth_resend(request: Request) -> dict:
+    user = _me(request)
+    if user["verified"]:
+        return {"delivery": "already_verified"}
+    try:
+        return _auth_call(S().accounts.send_code, user)
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        log.exception("could not send the verification email")
+        raise HTTPException(502, f"Couldn't send the email: {str(exc)[:160]}") from exc
+
+
+@app.post("/api/auth/verify")
+def auth_verify(request: Request, code: str = Body(..., embed=True)) -> dict:
+    return {"user": S().accounts.public(_auth_call(S().accounts.verify, _me(request), code))}
+
+
+@app.post("/api/auth/profile")
+def auth_profile(request: Request, profile: dict = Body(..., embed=True)) -> dict:
+    user = _me(request)
+    if not user["verified"]:
+        raise HTTPException(403, "Verify your email first.")
+    return {"user": S().accounts.public(_auth_call(S().accounts.set_profile, user, profile))}
+
+
+@app.post("/api/auth/ai-key")
+def auth_ai_key(request: Request, key: str = Body(...), provider: str = Body("anthropic"),
+                use_cloud: bool = Body(True)) -> dict:
+    user = _me(request)
+    if not user["verified"]:
+        raise HTTPException(403, "Verify your email first.")
+    user = _auth_call(S().accounts.set_ai_key, user, provider, key)
+    # their choice: let Claude read requests and double-check alerts (a few frames per alert leave the computer)
+    S().db.set_kv("privacy", privacy.apply({**privacy.current(), "private_mode": not use_cloud}))
+    return {"user": S().accounts.public(user), "privacy": privacy.current()}
+
+
+@app.post("/api/auth/finish")
+def auth_finish(request: Request) -> dict:
+    return {"user": S().accounts.public(_auth_call(S().accounts.finish, _me(request)))}
+
+
+@app.post("/api/feedback")
+def send_feedback(request: Request, rating: int | None = Body(None), kind: str = Body("general"),
+                  text: str = Body(""), page: str = Body("")) -> dict:
+    user = getattr(request.state, "user", None)
+    return _auth_call(S().accounts.add_feedback, user, rating, kind, text, page)
+
+
+@app.get("/api/feedback")
+def list_feedback() -> list[dict]:
+    return S().accounts.feedback()
 
 
 # ---------------------------------------------------------------------------------------------
@@ -1089,6 +1226,10 @@ def event_feedback(eid: int, body: FeedbackIn) -> dict:
 
 @app.websocket("/api/live")
 async def live(ws: WebSocket) -> None:
+    user = S().accounts.session_user(ws.cookies.get(COOKIE))
+    if user is None or S().accounts.next_step(user) != "ready":
+        await ws.close(code=4401)
+        return
     await ws.accept()
     q = bus.subscribe()
     try:

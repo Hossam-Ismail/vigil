@@ -2,6 +2,7 @@ import { ArrowUp, Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Camera } from '../lib/api'
+import { suggestionsFor, useAuth } from '../lib/auth'
 import { cx } from './ui'
 
 const EXAMPLES = [
@@ -22,6 +23,8 @@ export function PromptBar({ cameras, defaultCamera, compact }: { cameras: Camera
   const [cam, setCam] = useState<number | undefined>(defaultCamera)
   const nav = useNavigate()
   const ref = useRef<HTMLTextAreaElement>(null)
+  const { me } = useAuth()
+  const examples = me ? suggestionsFor(me.profile) : EXAMPLES
 
   useEffect(() => {
     if (cam === undefined && cameras.length) setCam(defaultCamera ?? cameras[0].id)
@@ -65,7 +68,7 @@ export function PromptBar({ cameras, defaultCamera, compact }: { cameras: Camera
           ))}
         </select>
         {!compact &&
-          EXAMPLES.slice(0, 4).map((ex) => (
+          examples.slice(0, 4).map((ex) => (
             <button
               key={ex}
               onClick={() => {

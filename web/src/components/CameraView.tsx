@@ -7,7 +7,10 @@ import { cx } from './ui'
 
 type Props = {
   cameraId: number
+  /** the camera's own width / height */
   aspect?: number
+  /** every view is this shape, whatever the camera: a phone's tall picture sits centred in it */
+  frame?: number
   watches?: Watch[]
   focusWatchId?: number
   showDetections?: boolean
@@ -66,14 +69,20 @@ function Tag({ x, y, color, children }: { x: number; y: number; color: string; c
   )
 }
 
-export function CameraView({ cameraId, aspect = 16 / 9, watches = [], focusWatchId, showDetections = true, showLabels = true, fps = 5, className, children, rounded = true }: Props) {
+export function CameraView({ cameraId, aspect = 16 / 9, frame = 16 / 9, watches = [], focusWatchId, showDetections = true, showLabels = true, fps = 5, className, children, rounded = true }: Props) {
   const perception = useLive((s) => s.perception[cameraId])
   const rtById = new Map((perception?.watches ?? []).map((w) => [w.id, w]))
   const shown = focusWatchId ? watches.filter((w) => w.id === focusWatchId) : watches
   const focusRt = focusWatchId ? rtById.get(focusWatchId) : undefined
 
   return (
-    <div className={cx('relative w-full overflow-hidden bg-black', rounded && 'rounded-lg', className)} style={{ aspectRatio: String(aspect) }}>
+    <div className={cx('relative flex w-full items-center justify-center overflow-hidden bg-black', rounded && 'rounded-lg', className)} style={{ aspectRatio: String(frame) }}>
+      {Math.abs(aspect - frame) > 0.02 && (
+        // a soft, dark copy of the feed fills the sides so a tall or wide camera still reads as one tile
+        <LiveImage cameraId={cameraId} fps={1} className="absolute inset-0 h-full w-full scale-110 opacity-45 blur-2xl" />
+      )}
+      {/* the picture at its true shape; zones, boxes and labels are drawn in its coordinates */}
+      <div className="relative max-h-full max-w-full" style={aspect < frame ? { height: '100%', aspectRatio: String(aspect) } : { width: '100%', aspectRatio: String(aspect) }}>
       <LiveImage cameraId={cameraId} fps={fps} className="absolute inset-0 h-full w-full" />
       <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1 1" preserveAspectRatio="none">
         {shown.map((w) =>
@@ -121,6 +130,7 @@ export function CameraView({ cameraId, aspect = 16 / 9, watches = [], focusWatch
         </div>
       )}
       {children}
+      </div>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { AuthProvider, useAuth } from './lib/auth'
 import { startLive } from './lib/live'
@@ -13,19 +13,26 @@ import { NewWatch } from './pages/NewWatch'
 import { PushCamera } from './pages/PushCamera'
 import { Settings } from './pages/Settings'
 import { Lab } from './pages/Lab'
+import { Landing } from './pages/Landing'
 import { Onboarding, Welcome } from './pages/Welcome'
 import { WatchDetail } from './pages/WatchDetail'
 import { Watches } from './pages/Watches'
 
-/** Nothing opens until there is a verified .edu account that finished setup (questions, AI key, camera). */
+/** Signed-out visitors see the marketing site at "/" (sign-in at "/?signin"); nothing else opens until there is a
+ *  verified .edu account that finished setup (questions, AI key, camera). */
 function Gate({ children }: { children: ReactNode }) {
   const { me, loading } = useAuth()
+  const loc = useLocation()
+  const nav = useNavigate()
   const ready = me?.next === 'ready'
   useEffect(() => {
     if (ready) startLive()
   }, [ready])
   if (loading) return null
-  if (!me) return <Welcome />
+  if (!me) {
+    const signin = new URLSearchParams(loc.search).has('signin') || loc.pathname !== '/'
+    return signin ? <Welcome /> : <Landing onSignIn={() => nav('/?signin')} />
+  }
   if (!ready) return <Onboarding />
   return <>{children}</>
 }

@@ -1,33 +1,59 @@
-<section id="photon" data-transition="fade" style="display:flex; flex-direction:column; gap:40px; padding:104px 128px 150px; background:#0d0f11">
-  <div style="display:flex; flex-direction:column; gap:16px">
+<section id="photon" data-transition="fade" style="display:flex; flex-direction:column; gap:28px; padding:84px 128px 140px; background:#0d0f11">
+  <div style="display:flex; flex-direction:column; gap:12px">
     <p style="font-family:'Geist Mono', 'Courier New', monospace; font-size:24px; letter-spacing:3px; text-transform:uppercase; color:#c8f560">Agents in iMessage · built on Photon Spectrum</p>
-    <h2 style="font-family:Geist, Arial, sans-serif; font-size:64px; font-weight:700; line-height:1.08; letter-spacing:-2px; color:#eef0ea">Vigil lives in iMessage. Text it like a person.</h2>
+    <h2 style="font-family:Geist, Arial, sans-serif; font-size:60px; font-weight:700; line-height:1.05; letter-spacing:-2px; color:#eef0ea">Vigil lives in iMessage. Text it like a person.</h2>
   </div>
-  <div style="display:grid; grid-template-columns:820px 1fr; gap:64px; align-items:start">
-    <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#16191d; border:1px solid #262b31; border-radius:28px">
-      <p style="align-self:center; font-family:'Geist Mono', 'Courier New', monospace; font-size:20px; color:#7c848f">iMessage · Vigil</p>
-      <p style="align-self:flex-end; max-width:560px; padding:12px 20px; font-family:Geist, Arial, sans-serif; font-size:24px; line-height:1.3; color:#ffffff; background:#0a84ff; border-radius:22px">What's happening on the plaza?</p>
-      <img src="/_blob/24fbc3f61d0b591e8adb5df4f6e5de78" alt="The live photo Vigil texted back: a campus plaza camera with three people walking, their faces pixelated by Vigil" style="align-self:flex-start; width:320px; height:240px; object-fit:cover; border-radius:18px">
-      <p style="align-self:flex-start; max-width:600px; padding:12px 20px; font-family:Geist, Arial, sans-serif; font-size:24px; line-height:1.3; color:#eef0ea; background:#2a2f35; border-radius:22px">Plaza · Entrance, 7:56 PM: I see 3 people, 1 car and 1 truck.</p>
-      <p style="align-self:flex-end; max-width:560px; padding:12px 20px; font-family:Geist, Arial, sans-serif; font-size:24px; line-height:1.3; color:#ffffff; background:#0a84ff; border-radius:22px">Text me when a girl walks by</p>
-      <p style="align-self:flex-start; max-width:640px; padding:12px 20px; font-family:Geist, Arial, sans-serif; font-size:24px; line-height:1.3; color:#eef0ea; background:#2a2f35; border-radius:22px">I won't watch for that. Vigil does not single out people by gender, race, religion, age or other personal traits.</p>
-    </div>
-    <div style="display:flex; flex-direction:column; gap:26px">
-      <div style="display:flex; flex-direction:column; gap:18px">
-        <p style="font-family:Geist, Arial, sans-serif; font-size:28px; line-height:1.35; color:#eef0ea"><span style="color:#c8f560">✓</span>&nbsp; <b>An agent, not a notifier.</b> <span style="color:#a4acb6">Text it to start a watch, get a live photo or a count, pause one, or say an alert was wrong.</span></p>
-        <p style="font-family:Geist, Arial, sans-serif; font-size:28px; line-height:1.35; color:#eef0ea"><span style="color:#c8f560">✓</span>&nbsp; <b>Built on Spectrum,</b> <span style="color:#a4acb6">Photon's open-source SDK, end to end: it receives, reads, types, reacts and replies with photos.</span></p>
-        <p style="font-family:Geist, Arial, sans-serif; font-size:28px; line-height:1.35; color:#eef0ea"><span style="color:#c8f560">✓</span>&nbsp; <b>It texts first, too.</b> <span style="color:#a4acb6">Double-checked alerts arrive with the photo; a YES or NO retrains that watch.</span></p>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:6px; padding:22px 26px; background:#0f1215; border:1px solid #3e4a22; border-radius:16px">
-        <p style="font-family:'Geist Mono', 'Courier New', monospace; font-size:21px; line-height:1.5; color:#7c848f">// imessage-bridge/bridge.mjs · spectrum-ts</p>
-        <p style="font-family:'Geist Mono', 'Courier New', monospace; font-size:21px; line-height:1.5; color:#eef0ea"><span style="color:#c8f560">for await</span> (const [space, msg] of app.messages)</p>
-        <p style="font-family:'Geist Mono', 'Courier New', monospace; font-size:21px; line-height:1.5; color:#eef0ea">&nbsp;&nbsp;msg.read(); space.startTyping()</p>
-        <p style="font-family:'Geist Mono', 'Courier New', monospace; font-size:21px; line-height:1.5; color:#eef0ea">&nbsp;&nbsp;msg.react(<span style="color:#f5b13d">'👍'</span>)</p>
-        <p style="font-family:'Geist Mono', 'Courier New', monospace; font-size:21px; line-height:1.5; color:#eef0ea">&nbsp;&nbsp;space.send(text(reply), attachment(photo))</p>
+  <div style="display:grid; grid-template-columns:384px 1fr; gap:72px; align-items:start">
+    <div style="display:flex; flex-direction:column; width:384px; height:730px; padding:14px; background:#000000; border:3px solid #3a3f45; border-radius:56px">
+      <div style="display:flex; flex-direction:column; flex:1; overflow:hidden; background:#000000; border-radius:44px">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 30px 0; font-family:Geist, Arial, sans-serif; font-size:16px; font-weight:600; color:#ffffff"><p>7:56</p><div style="width:110px; height:30px; background:#16191d; border-radius:16px"></div><p>5G</p></div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0 12px; border-bottom:1px solid #1f2226">
+          <img src="/_blob/efe23739566049edf0ad818157447fad" alt="Vigil's eye logo as the contact photo" style="width:52px; height:52px; padding:8px; background:#16191d; border-radius:26px; object-fit:contain">
+          <p style="font-family:Geist, Arial, sans-serif; font-size:15px; color:#ffffff">Vigil ›</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; padding:14px 12px">
+          <p style="align-self:center; font-family:Geist, Arial, sans-serif; font-size:12px; color:#8e8e93">iMessage · Today 7:56 PM</p>
+          <p style="align-self:flex-end; max-width:250px; padding:9px 14px; font-family:Geist, Arial, sans-serif; font-size:18px; line-height:1.28; color:#ffffff; background:#0a84ff; border-radius:18px">What's happening on the plaza?</p>
+          <img src="/_blob/24fbc3f61d0b591e8adb5df4f6e5de78" alt="The live photo Vigil texted back: a campus plaza camera with three people walking, faces pixelated by Vigil" style="align-self:flex-start; width:220px; height:165px; object-fit:cover; border-radius:16px">
+          <p style="align-self:flex-start; max-width:270px; padding:9px 14px; font-family:Geist, Arial, sans-serif; font-size:18px; line-height:1.28; color:#f2f2f2; background:#26282b; border-radius:18px">Plaza · Entrance, 7:56 PM: I see 3 people, 1 car and 1 truck.</p>
+          <p style="align-self:flex-end; max-width:250px; padding:9px 14px; font-family:Geist, Arial, sans-serif; font-size:18px; line-height:1.28; color:#ffffff; background:#0a84ff; border-radius:18px">Text me when a girl walks by</p>
+          <p style="align-self:flex-start; max-width:270px; padding:9px 14px; font-family:Geist, Arial, sans-serif; font-size:18px; line-height:1.28; color:#f2f2f2; background:#26282b; border-radius:18px">I won't watch for that. Vigil does not single out people by gender, race, religion, age or other personal traits.</p>
+        </div>
       </div>
     </div>
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <p style="font-family:'Geist Mono', 'Courier New', monospace; font-size:22px; letter-spacing:2px; color:#7c848f">HOW A TEXT BECOMES AN ACTION</p>
+      <div style="display:flex; gap:22px; align-items:flex-start; padding:18px 24px; background:#16191d; border:1px solid #262b31; border-radius:16px">
+        <p style="font-family:'Geist Mono', 'Courier New', monospace; font-size:22px; color:#c8f560; width:36px">01</p>
+        <div style="display:flex; flex-direction:column; gap:4px; flex:1">
+          <p style="font-family:Geist, Arial, sans-serif; font-size:26px; font-weight:700; color:#eef0ea">Your iPhone → this Mac's Messages</p>
+          <p style="font-family:Geist, Arial, sans-serif; font-size:22px; line-height:1.35; color:#a4acb6">Plain iMessage. Nothing to install on the phone; only the owner's number gets answers.</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:22px; align-items:flex-start; padding:18px 24px; background:#1b2410; border:2px solid #c8f560; border-radius:16px">
+        <p style="font-family:'Geist Mono', 'Courier New', monospace; font-size:22px; color:#c8f560; width:36px">02</p>
+        <div style="display:flex; flex-direction:column; gap:4px; flex:1">
+          <p style="font-family:Geist, Arial, sans-serif; font-size:26px; font-weight:700; color:#eef0ea">Photon Spectrum receives it</p>
+          <p style="font-family:Geist, Arial, sans-serif; font-size:22px; line-height:1.35; color:#a4acb6"><span style="font-family:'Geist Mono', monospace; font-size:20px; color:#eef0ea">spectrum-ts</span> + <span style="font-family:'Geist Mono', monospace; font-size:20px; color:#eef0ea">imessage-local</span> stream the message, mark it read and show typing while Vigil works.</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:22px; align-items:flex-start; padding:18px 24px; background:#16191d; border:1px solid #262b31; border-radius:16px">
+        <p style="font-family:'Geist Mono', 'Courier New', monospace; font-size:22px; color:#c8f560; width:36px">03</p>
+        <div style="display:flex; flex-direction:column; gap:4px; flex:1">
+          <p style="font-family:Geist, Arial, sans-serif; font-size:26px; font-weight:700; color:#eef0ea">Vigil's agent decides and acts</p>
+          <p style="font-family:Geist, Arial, sans-serif; font-size:22px; line-height:1.35; color:#a4acb6"><span style="font-family:'Geist Mono', monospace; font-size:20px; color:#eef0ea">POST /api/imessage/inbound</span> → intent: create watch · look · count · status · pause · YES/NO. New watches pass the safety policy, then train.</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:22px; align-items:flex-start; padding:18px 24px; background:#1b2410; border:2px solid #c8f560; border-radius:16px">
+        <p style="font-family:'Geist Mono', 'Courier New', monospace; font-size:22px; color:#c8f560; width:36px">04</p>
+        <div style="display:flex; flex-direction:column; gap:4px; flex:1">
+          <p style="font-family:Geist, Arial, sans-serif; font-size:26px; font-weight:700; color:#eef0ea">Spectrum replies in the thread</p>
+          <p style="font-family:Geist, Arial, sans-serif; font-size:22px; line-height:1.35; color:#a4acb6">Tapback, text and the face-blurred photo: <span style="font-family:'Geist Mono', monospace; font-size:20px; color:#eef0ea">space.send(text(reply), attachment(photo))</span>. Alerts go out the same way, unprompted.</p>
+        </div>
+      </div>
+    </div>
   </div>
-  <p style="position:absolute; bottom:64px; left:128px; width:1200px; font-family:'Geist Mono', 'Courier New', monospace; font-size:24px; color:#7c848f">Vigil · @spectrum-ts/core + @spectrum-ts/imessage-local</p>
-  <p style="position:absolute; right:128px; bottom:64px; width:200px; font-family:'Geist Mono', 'Courier New', monospace; font-size:24px; text-align:right; color:#7c848f">05</p>
-  <aside>This is Vigil's entry for Photon's Agents in iMessage challenge: an agent that lives in iMessage, built on Spectrum, Photon's open-source SDK (spectrum-ts with the local iMessage provider, on a Mac signed in to Messages; nothing to install on the phone). It goes both ways. Vigil texts first: when a watch fires and the double-check agrees, the alert arrives with the photo, and now and then it asks whether it was right, so a YES or NO retrains that watch. And you can text Vigil: "Text me when a package is left at the door" builds a new watch (through the same safety rules as the app); "What's happening on the plaza?" sends back a live photo with faces blurred and what it sees; "How many people are on the plaza?" reads the live count; "What are you watching?" lists every watch; "Pause dock" and "Resume dock" control them. Spectrum carries the whole conversation: it streams incoming messages, marks them read, shows typing while Vigil thinks, reacts with a tapback and replies with text and photos in the same thread. Only the owner's number, set in Settings, can talk to Vigil; texts from anyone else get no answer. The conversation on the left is Vigil's real replies from the running app on its plaza test camera; the photo is the one it sent, faces pixelated by Vigil.</aside>
+  <p style="position:absolute; bottom:56px; left:128px; width:1500px; font-family:'Geist Mono', 'Courier New', monospace; font-size:22px; color:#7c848f">Vigil · @spectrum-ts/core + imessage-local · real replies from the running app</p>
+  <p style="position:absolute; right:128px; bottom:56px; width:200px; font-family:'Geist Mono', 'Courier New', monospace; font-size:24px; text-align:right; color:#7c848f">05</p>
+  <aside>This is Vigil's entry for Photon's Agents in iMessage challenge: an agent that lives in iMessage, built on Spectrum, Photon's open-source SDK (spectrum-ts with the local iMessage provider, on a Mac signed in to Messages; nothing to install on the phone). It goes both ways. Vigil texts first: when a watch fires and the double-check agrees, the alert arrives with the photo, and now and then it asks whether it was right, so a YES or NO retrains that watch. And you can text Vigil: "Text me when a package is left at the door" builds a new watch (through the same safety rules as the app); "What's happening on the plaza?" sends back a live photo with faces blurred and what it sees; "How many people are on the plaza?" reads the live count; "What are you watching?" lists every watch; "Pause dock" and "Resume dock" control them. Spectrum carries the whole conversation: it streams incoming messages, marks them read, shows typing while Vigil thinks, reacts with a tapback and replies with text and photos in the same thread. Only the owner's number, set in Settings, can talk to Vigil; texts from anyone else get no answer. The conversation in the phone is Vigil's real replies from the running app on its plaza test camera; the photo is the one it sent, faces pixelated by Vigil.</aside>
 </section>

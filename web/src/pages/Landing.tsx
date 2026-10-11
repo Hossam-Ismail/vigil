@@ -834,15 +834,20 @@ function HowSteps() {
 export function Landing({ onSignIn }: { onSignIn: () => void }) {
   const { me, setMe } = useAuth()
   const [busy, setBusy] = useState(false)
+  const nav = useNavigate()
+  const [demoErr, setDemoErr] = useState(false)
+  /** Into the live app as the demo account (already signed in: straight to the dashboard). */
   const demo = async () => {
-    setBusy(true)
+    setBusy(true); setDemoErr(false)
     try {
-      setMe((await api.post<{ user: Me }>('/api/auth/login', { email: 'test', password: '123' })).user)
+      if (!me) setMe((await api.post<{ user: Me }>('/api/auth/login', { email: 'test', password: '123' })).user)
+      nav('/')
+    } catch {
+      setDemoErr(true)
     } finally {
       setBusy(false)
     }
   }
-  const nav = useNavigate()
   const openInApp = async (prompt: string, camHint?: string) => {
     const q = new URLSearchParams({ prompt, ...(camHint ? { cam: camHint } : {}) })
     if (!me) {
@@ -904,6 +909,7 @@ export function Landing({ onSignIn }: { onSignIn: () => void }) {
               </p>
             </Reveal>
             <Reveal delay={240} className="mt-10 flex flex-wrap gap-3">{ctas}</Reveal>
+            {demoErr && <div className="slide-in mt-3 text-[13.5px] text-alert">Couldn’t open the demo just now. Try again in a moment.</div>}
             <Reveal delay={280} className="mt-4 flex items-center gap-2 text-[13px] text-muted"><ShieldCheck className="size-4 text-accent" />Vigil watches for visible events and refuses requests that target people.</Reveal>
             <Reveal delay={320} className="mt-10 grid max-w-[520px] grid-cols-3 gap-4 border-t border-line pt-6">
               {[['< 20 s', 'sentence to live watch'], ['41 ms', 'per frame checked'], ['0', 'models to train']].map(([n, t]) => (

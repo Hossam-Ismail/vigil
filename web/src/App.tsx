@@ -37,6 +37,13 @@ function Gate({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+/** The marketing site at /home, whether or not you're signed in. */
+function Website() {
+  const { me } = useAuth()
+  const nav = useNavigate()
+  return <Landing onSignIn={() => nav(me ? '/' : '/?signin')} />
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -51,6 +58,7 @@ function AppRoutes() {
   return (
       <Routes>
         <Route path="/push/:id" element={<PushCamera />} />
+        <Route path="/home" element={<Website />} />
         <Route element={<Gate><Layout /></Gate>}>
           <Route index element={<Live />} />
           <Route path="new" element={<NewWatch />} />

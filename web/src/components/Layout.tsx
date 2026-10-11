@@ -162,6 +162,7 @@ function AccountMenu() {
           <div className="my-2 h-px bg-line" />
           <NavLink to="/lab" onClick={() => setOpen(false)} className="block rounded-md px-2 py-1.5 text-ink-2 hover:bg-panel-2 hover:text-ink md:hidden">Lab</NavLink>
           <NavLink to="/settings" onClick={() => setOpen(false)} className="block rounded-md px-2 py-1.5 text-ink-2 hover:bg-panel-2 hover:text-ink">Account &amp; settings</NavLink>
+          <NavLink to="/home" onClick={() => setOpen(false)} className="block rounded-md px-2 py-1.5 text-ink-2 hover:bg-panel-2 hover:text-ink">Vigil website</NavLink>
           <button onClick={() => { setOpen(false); setFeedback(true) }} className="block w-full rounded-md px-2 py-1.5 text-left text-ink-2 hover:bg-panel-2 hover:text-ink md:hidden">Beta feedback</button>
           <button onClick={signOut} className="block w-full rounded-md px-2 py-1.5 text-left text-ink-2 hover:bg-panel-2 hover:text-ink">Sign out</button>
         </div>

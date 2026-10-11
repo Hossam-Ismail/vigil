@@ -7,7 +7,7 @@ import { SampleThumb } from '../components/SampleThumb'
 import { Button, Card, cx, Spinner } from '../components/ui'
 import { ZoneEditor } from '../components/ZoneEditor'
 import { WatchPlan } from '../components/WatchPlan'
-import { api, type ApiError, type Camera, type Health, type Metrics, type Watch, type PolicyRefusal, type WatchSpec, type DatasetInfo } from '../lib/api'
+import { api, type ApiError, type Camera, type Metrics, type Watch, type PolicyRefusal, type WatchSpec, type DatasetInfo } from '../lib/api'
 import { pct } from '../lib/format'
 import { useFetch, useNow } from '../lib/hooks'
 import { clearBuild, useLive } from '../lib/live'
@@ -60,8 +60,6 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 function CompileStatus() {
   const [start] = useState(() => Date.now() / 1000)
   const now = useNow(1000)
-  const health = useFetch<Health>('/api/health')
-  const brain = health.data?.brain
   const elapsed = Math.max(0, Math.round(now - start))
   return (
     <Card className="p-5">
@@ -77,13 +75,6 @@ function CompileStatus() {
       <div className="mt-5 flex flex-col gap-2">
         {[80, 64, 72].map((w, i) => <div key={i} className="shimmer h-3 rounded" style={{ width: `${w}%` }} />)}
       </div>
-      {brain && (
-        <div className="mt-5 text-[12px] text-muted">
-          Using {brain.label}.
-          {brain.name === 'local' && ' Running on this Mac takes about a minute; with a Claude API key it takes a few seconds.'}
-          {brain.name === 'heuristic' && ' This basic offline mode only understands simple requests; add a Claude key or a local model in Settings.'}
-        </div>
-      )}
     </Card>
   )
 }

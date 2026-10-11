@@ -83,6 +83,16 @@ def write_clip(frames: list[tuple[float, bytes]], path: Path, fps: float) -> boo
     return True
 
 
+def _is_action(spec: WatchSpec) -> bool:
+    """Watches run by the action-recognition (video) model."""
+    if not spec.library:
+        return False
+    from ..perception.library import BY_ID
+
+    m = BY_ID.get(spec.library.get("id"))
+    return bool(m and m.kind == "video")
+
+
 class EventManager:
     def __init__(self, db: DB, hub: CameraHub, store: ModelStore, notifier: Notifier, actions: "ActionRunner | None" = None):
         self.db = db
@@ -147,14 +157,22 @@ class EventManager:
         if spec.verify_with_vlm:
             brain = get_brain()
             cam = self.hub.get(trig.camera_id)
+            action = _is_action(spec)
             frames = []
             if cam:
-                ring = cam.clip_frames(trig.ts - 2.5, trig.ts + 0.5)
-                pick = ring[:: max(1, len(ring) // 3)][-3:] if ring else []
+                if action:   # the clip the video model judged: the action may already be over by now
+                    ring = cam.clip_frames(trig.ts - 3.5, trig.ts)
+                    pick = [ring[int(i)] for i in np.linspace(0, len(ring) - 1, 4)] if ring else []
+                else:
+                    ring = cam.clip_frames(trig.ts - 2.5, trig.ts + 0.5)
+                    pick = ring[:: max(1, len(ring) // 3)][-3:] if ring else []
                 frames = [cv2.imdecode(np.frombuffer(j, np.uint8), cv2.IMREAD_COLOR) for _, j in pick]
-            frames = [f for f in frames if f is not None] + [crop_img]
-            task = LabelTask(spec.question, spec.positive_label, spec.negative_label,
-                             context=f"Camera '{camera['name']}'. User request: {watch['prompt']}")
+            frames = [f for f in frames if f is not None] + ([] if action else [crop_img])
+            context = f"Camera '{camera['name']}'. User request: {watch['prompt']}"
+            if action:
+                context += (" This is an action that takes a few seconds; the images span it in time order. Answer yes"
+                            " if the action is clearly happening in any of them, even if it has finished by the last.")
+            task = LabelTask(spec.question, spec.positive_label, spec.negative_label, context=context)
             try:
                 t = time.time()
                 future = self.verify_pool.submit(brain.verify, frames, task)

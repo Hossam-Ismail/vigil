@@ -82,6 +82,7 @@ class CameraAnalyzer:
             if ts - rt.last_eval < MODEL_INTERVAL_S:
                 continue
             m = rt.model
+            shot = frame
             try:
                 if m.kind == "detector":
                     label = rt.spec.locate_noun or (rt.spec.targets[0] if rt.spec.targets else rt.name)
@@ -96,6 +97,7 @@ class CameraAnalyzer:
                     if len(frames) < 4:
                         continue
                     trig = rt.step_state(ts, p=m.proba_clip(frames), threshold=m.threshold)
+                    shot = frames[len(frames) // 2]   # the action itself, not the moment after it
                 else:
                     trig = rt.step_state(ts, p=m.proba(zone_crop(frame, rt.spec.zone)), threshold=m.threshold)
             except Exception:  # noqa: BLE001
@@ -103,7 +105,7 @@ class CameraAnalyzer:
                 rt.last_eval = ts + 5
                 continue
             if trig and rt.spec.alerts:
-                self.engine.events.create(trig, frame)
+                self.engine.events.create(trig, shot)
         return shown
 
     def _tick(self, frame: np.ndarray, ts: float) -> None:

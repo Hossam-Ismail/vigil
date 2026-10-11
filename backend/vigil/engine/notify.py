@@ -79,9 +79,10 @@ class Notifier:
             headers["Click"] = self._link(event)
         if snapshot and snapshot.exists():
             headers["Filename"] = "snapshot.jpg"
-            self.http.put(url, content=snapshot.read_bytes(), headers=headers).raise_for_status()
+            self.http.put(url, content=snapshot.read_bytes(), headers=_ascii_headers(headers)).raise_for_status()
         else:
-            self.http.post(url, content=headers.pop("Message").encode(), headers=headers).raise_for_status()
+            body = headers.pop("Message").encode()
+            self.http.post(url, content=body, headers=_ascii_headers(headers)).raise_for_status()
 
     def _slack(self, ch, event, watch, camera, snapshot, severity) -> None:
         text = f"*{self._title(watch, camera)}*\n{event['message']}"
@@ -98,3 +99,10 @@ class Notifier:
         msg = event["message"].replace('"', "'")
         subprocess.run(["osascript", "-e", f'display notification "{msg}" with title "Vigil" subtitle "{title}"'],
                        check=True, timeout=5)
+
+
+def _ascii_headers(headers: dict) -> dict:
+    """HTTP header values must be single-line ASCII; anything else ("·", curly quotes, accents, line breaks)
+    goes as RFC 2047 UTF-8, which ntfy decodes."""
+    return {k: (str(v) if str(v).isascii() and "\n" not in str(v)
+                else "=?UTF-8?B?" + base64.b64encode(str(v).encode()).decode() + "?=") for k, v in headers.items()}

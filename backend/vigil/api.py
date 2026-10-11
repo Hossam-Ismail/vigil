@@ -39,6 +39,7 @@ from .learning.store import ModelStore, prior_labels
 from .perception.embedder import get_embedder
 from .perception.geometry import crop, zone_crop
 from .schemas import (
+    Action,
     CameraIn,
     CameraPatch,
     FeedbackIn,
@@ -1024,6 +1025,15 @@ def _live_defaults(spec: WatchSpec, prompt: str) -> None:
         spec.trigger = "rising"
 
 
+def _text_by_default(spec: WatchSpec) -> None:
+    """Every alerting watch texts the owner over iMessage when iMessage is set up, whether or not the request said
+    "text me"; other actions the request asked for (HubSpot, webhooks) stay as they are."""
+    if not spec.alerts or any(a.type == "imessage" for a in spec.actions):
+        return
+    if (S().db.get_kv("integrations", {}) or {}).get("imessage_to"):
+        spec.actions.append(Action(type="imessage", note=spec.alert_message or spec.name))
+
+
 @app.post("/api/watches/draft")
 def draft_watch(body: WatchDraftIn) -> dict:
     cam = _cam_or_404(body.camera_id)
@@ -1048,6 +1058,7 @@ def draft_watch(body: WatchDraftIn) -> dict:
                          str(pol.get("suggestion") or "Describe an object, event or condition instead.")))
     spec = _sanitize(raw)
     _live_defaults(spec, prompt)
+    _text_by_default(spec)
     _enforce(check_spec(spec.model_dump()))
     t = time.time()
     try:

@@ -1,4 +1,4 @@
-import { BarChart3, Bell, Brain, Camera, Eye, LayoutGrid, Settings, X, FlaskConical } from 'lucide-react'
+import { BarChart3, Bell, Camera, Eye, LayoutGrid, Settings, X, FlaskConical } from 'lucide-react'
 import { useAuth, signOut } from '../lib/auth'
 import { BetaPill } from '../pages/Welcome'
 import { FeedbackButton, FeedbackModal } from './Feedback'
@@ -36,10 +36,10 @@ function BrainStatus() {
     return () => clearInterval(id)
   }, [])
   return (
-    <NavLink to="/settings" className="hud hidden items-center gap-2 text-muted hover:text-ink lg:flex" title={h ? `Brain: ${h.brain.label}` : 'connecting'}>
+    <NavLink to="/settings" className="hud hidden items-center gap-2 text-muted hover:text-ink lg:flex" title={connected ? 'Online' : 'Connecting'}>
       <span className={cx('size-1.5 rounded-full', connected ? 'bg-accent live-dot' : 'bg-alert')} />
       {connected ? 'ONLINE' : 'RECONNECTING'} · <Clock />
-      {h && <span className="max-w-[220px] truncate normal-case tracking-normal text-[12px] text-muted"><Brain className="mr-1 inline size-3.5" />{h.models_ready ? h.brain.label : 'warming up models…'}</span>}
+      {h && !h.models_ready && <span className="normal-case tracking-normal text-[12px] text-muted">warming up…</span>}
     </NavLink>
   )
 }
@@ -115,9 +115,6 @@ export function Layout() {
         </nav>
         <div className="ml-auto flex items-center gap-3 md:gap-4">
           <BrainStatus />
-          <NavLink to="/new" className="hud flex h-9 items-center border border-accent px-3 text-accent hover:bg-accent hover:text-accent-ink">
-            + NEW<span className="hidden sm:inline">&nbsp;WATCH</span>
-          </NavLink>
           <AccountMenu />
         </div>
       </header>

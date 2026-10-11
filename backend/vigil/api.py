@@ -643,6 +643,37 @@ def demo_control(cid: int, bin: str | None = Body(None), level: float | None = B
     return rt.scene.state()
 
 
+@app.post("/api/lab/clip")
+def lab_clip(camera_id: int = Body(...), options: list[str] = Body(...), seconds: float = Body(1.5)) -> dict:
+    """Test bench: score the last few seconds of a camera against written options with the video-text model,
+    next to a single-frame SigLIP baseline on the newest frame."""
+    from .perception.video import get_videotext
+
+    opts = [o.strip() for o in options if o and o.strip()][:8]
+    if len(opts) < 2:
+        raise HTTPException(400, "write at least two options")
+    rt = S().hub.get(camera_id)
+    if not rt:
+        raise HTTPException(409, "camera is not running")
+    now = time.time()
+    ring = rt.clip_frames(now - min(max(seconds, 0.5), 5.0), now)
+    frames = [f for f in (cv2.imdecode(np.frombuffer(j, np.uint8), cv2.IMREAD_COLOR) for _, j in ring) if f is not None]
+    if len(frames) < 2:
+        raise HTTPException(409, "camera has no recent frames yet")
+    video, ms_video = get_videotext().score(frames, opts)
+    emb = get_embedder()
+    t = time.perf_counter()
+    img = emb.embed_images([frames[-1]])[0]
+    sims = np.array([float(img @ emb.embed_text(o)) for o in opts]) * emb.logit_scale
+    image = np.exp(sims - sims.max())
+    image = image / image.sum()
+    ms_image = (time.perf_counter() - t) * 1000
+    return {"video": [{"option": o, "p": round(p, 4)} for o, p in zip(opts, video)],
+            "image": [{"option": o, "p": round(float(p), 4)} for o, p in zip(opts, image)],
+            "ms_video": round(ms_video, 1), "ms_image": round(ms_image, 1), "frames": len(frames),
+            "span_s": round(ring[-1][0] - ring[0][0], 2)}
+
+
 @app.get("/api/webcams")
 def webcams() -> list[dict]:
     """Cameras attached to this machine, by name, built-in first (an iPhone via Continuity Camera is marked)."""

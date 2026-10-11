@@ -1,4 +1,4 @@
-import { BarChart3, Bell, Brain, Camera, Eye, LayoutGrid, Settings, X } from 'lucide-react'
+import { BarChart3, Bell, Brain, Camera, Eye, LayoutGrid, Settings, X, FlaskConical } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api, media, type Health } from '../lib/api'
@@ -12,6 +12,7 @@ const NAV = [
   { to: '/metrics', label: 'Metrics', icon: BarChart3 },
   { to: '/events', label: 'Inbox', icon: Bell },
   { to: '/cameras', label: 'Cameras', icon: Camera },
+  { to: '/lab', label: 'Lab', icon: FlaskConical },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]
 

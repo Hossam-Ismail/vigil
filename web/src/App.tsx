@@ -10,6 +10,7 @@ import { Live } from './pages/Live'
 import { NewWatch } from './pages/NewWatch'
 import { PushCamera } from './pages/PushCamera'
 import { Settings } from './pages/Settings'
+import { Lab } from './pages/Lab'
 import { WatchDetail } from './pages/WatchDetail'
 import { Watches } from './pages/Watches'
 
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="cameras" element={<Cameras />} />
           <Route path="cameras/:id" element={<CameraDetail />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="lab" element={<Lab />} />
         </Route>
       </Routes>
     </BrowserRouter>

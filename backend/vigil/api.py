@@ -141,7 +141,7 @@ app = FastAPI(title="Vigil", version=__version__, lifespan=lifespan)
 # accounts: nothing but sign-in and onboarding works until a verified .edu account with a checked AI key exists
 
 COOKIE = "vigil_session"
-OPEN_PATHS = ("/api/auth/", "/api/health", "/api/imessage/inbound")
+OPEN_PATHS = ("/api/auth/", "/api/health", "/api/imessage/inbound", "/api/safety/check")
 # the "connect a camera" onboarding step needs these before the account is fully set up
 CAMERA_STEP_PATHS = ("/api/cameras", "/api/webcams", "/api/discover")
 
@@ -382,6 +382,13 @@ def _latest_frame(cid: int, wait: float = 4.0) -> np.ndarray:
 
 # ---------------------------------------------------------------------------------------------
 # system
+
+
+@app.post("/api/safety/check")
+def safety_check(text: str = Body(..., embed=True)) -> dict:
+    """The same first-line policy every request goes through, open to the marketing site so anyone can try to
+    misuse Vigil and see the refusal. It only reads the words; nothing is watched or stored."""
+    return check_text(text[:300]).out()
 
 
 @app.get("/api/health")

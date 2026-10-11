@@ -205,3 +205,7 @@ body {
   .marquee, .sweep, .caret::after, .typing-dot { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
 }
+
+@keyframes progress { from { width: 0; } to { width: 100%; } }
+.progress-7s { animation: progress 7s linear both; }
+@media (prefers-reduced-motion: reduce) { .progress-7s { animation: none; width: 100%; } }

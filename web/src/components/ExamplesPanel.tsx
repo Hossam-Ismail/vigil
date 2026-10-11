@@ -1,16 +1,17 @@
 import { ArrowRight, Check, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api, type Camera, type Watch } from '../lib/api'
+import { api, type ApiError, type Camera, type Watch } from '../lib/api'
 import { useFetch } from '../lib/hooks'
 import { LoopVideo } from '../pages/landing/motion'
 import { cx } from './ui'
 
 type Example = {
   id: string; cat: string; title: string; camera: string; preview: string; poster: string
-  prompt: string; how: string; expect: string; camera_id: number | null
+  prompt: string; safe?: string; how: string; expect: string; camera_id: number | null
 }
 type Step = { label: string; detail?: string; state: 'doing' | 'done' | 'bad' }
+type Verdict = { allowed: boolean; category: string; reason: string; suggestion: string }
 
 /** The dashboard's walkthrough: pick an example, check the prompt, click Build, and land on the watch running live.
  *  Each click does the real thing: it adds the footage as a camera, understands the request, and starts the watch. */
@@ -22,6 +23,7 @@ export function ExamplesPanel() {
   const [steps, setSteps] = useState<Step[]>([])
   const [busy, setBusy] = useState(false)
   const [secs, setSecs] = useState(0)
+  const [refusal, setRefusal] = useState<{ reason: string; rewrite: string } | null>(null)
   const nav = useNavigate()
   const ex = list[i]
   const panel = useRef<HTMLElement>(null)
@@ -47,27 +49,42 @@ export function ExamplesPanel() {
 
   if (!ex) return null
 
-  const pick = (k: number) => { if (!busy) { setI(k); setSteps([]) } }
+  const pick = (k: number) => { if (!busy) { setI(k); setSteps([]); setRefusal(null) } }
   const set = (k: number, st: Step) => setSteps((s) => { const n = [...s]; n[k] = st; return n })
 
   const build = async () => {
     const q = prompt.trim()
     if (!q || busy) return
-    setBusy(true); setSteps([])
+    setBusy(true); setSteps([]); setRefusal(null)
     try {
-      set(0, { label: 'Adding the footage as a camera', state: 'doing' })
+      // every build starts with the safety check, so a misuse request stops here and nothing is set up
+      set(0, { label: 'Checking it against the safety policy', state: 'doing' })
+      const v = await api.post<Verdict>('/api/safety/check', { text: q })
+      if (!v.allowed) {
+        set(0, { label: 'Refused by the safety policy', detail: 'nothing was set up or watched', state: 'bad' })
+        setRefusal({ reason: v.reason, rewrite: (q === ex.prompt && ex.safe) || v.suggestion })
+        setBusy(false)
+        return
+      }
+      set(0, { label: 'Passed the safety check', detail: 'it watches an event, not a person', state: 'done' })
+      set(1, { label: 'Adding the footage as a camera', state: 'doing' })
       const cam = await api.post<Camera>(`/api/examples/${ex.id}/camera`)
-      set(0, { label: 'Camera ready', detail: cam.name, state: 'done' })
-      set(1, { label: 'Understanding your request', detail: 'what to look for, who to tell', state: 'doing' })
+      set(1, { label: 'Camera ready', detail: cam.name, state: 'done' })
+      set(2, { label: 'Understanding your request', detail: 'what to look for, who to tell', state: 'doing' })
       const w = await api.post<Watch>('/api/watches/draft', { camera_id: cam.id, prompt: q })
-      set(1, { label: 'Request understood', detail: w.name, state: 'done' })
-      set(2, { label: 'Starting the watch', state: 'doing' })
+      set(2, { label: 'Request understood', detail: w.name, state: 'done' })
+      set(3, { label: 'Starting the watch', state: 'doing' })
       await api.post(`/api/watches/${w.id}/build`, {})
-      set(2, { label: 'Watching now', detail: 'opening it…', state: 'done' })
+      set(3, { label: 'Watching now', detail: 'opening it…', state: 'done' })
       setTimeout(() => nav(`/watches/${w.id}?new=1`), 700)
     } catch (e) {
-      const msg = (e as { message?: string }).message || 'Something went wrong.'
-      setSteps((s) => [...s.filter((x) => x.state === 'done'), { label: 'Couldn’t build it', detail: msg, state: 'bad' }])
+      const err = e as ApiError
+      if (err.policy) {
+        setSteps((s) => [...s.filter((x) => x.state === 'done'), { label: 'Refused by the safety policy', detail: 'nothing is watched', state: 'bad' }])
+        setRefusal({ reason: err.policy.reason, rewrite: ex.safe || err.policy.suggestion })
+      } else {
+        setSteps((s) => [...s.filter((x) => x.state === 'done'), { label: 'Couldn’t build it', detail: err.message || 'Something went wrong.', state: 'bad' }])
+      }
       setBusy(false)
     }
   }
@@ -120,6 +137,19 @@ export function ExamplesPanel() {
               </li>
             ))}
           </ol>
+          {refusal && (
+            <div className="slide-in mt-3 rounded-xl border border-alert/50 bg-alert-soft p-3.5">
+              <div className="text-[14.5px] leading-snug">{refusal.reason}</div>
+              {refusal.rewrite && (
+                <button onClick={() => { setPrompt(refusal.rewrite); setRefusal(null); setSteps([]) }}
+                  className="group mt-3 flex w-full items-start gap-2 rounded-lg border border-line bg-bg/60 px-3 py-2.5 text-left transition-colors hover:border-accent">
+                  <span className="hud mt-0.5 shrink-0 text-[10px] text-accent">USE THE SAFE VERSION</span>
+                  <span className="flex-1 text-[14px]">“{refusal.rewrite}”</span>
+                  <ArrowRight className="mt-0.5 size-4 shrink-0 text-muted group-hover:text-accent" />
+                </button>
+              )}
+            </div>
+          )}
           {!steps.length && <div className="mt-3 text-[12.5px] text-muted">3 · You land on the watch: the video shows what Vigil sees, and alerts appear right under it.</div>}
         </div>
       </div>
@@ -133,7 +163,8 @@ export function ExamplesPanel() {
             <div className="min-w-0">
               <div className="text-[11.5px] text-muted">{x.cat}</div>
               <div className={cx('text-[14px] leading-snug', k === i ? 'text-ink' : 'text-ink-2 group-hover:text-ink')}>{x.title}</div>
-              {x.camera_id && <div className="hud mt-0.5 text-[9.5px] text-accent">CAMERA ADDED</div>}
+              {x.id === 'crowd' ? <div className="hud mt-0.5 text-[9.5px] text-alert">SHOULD BE REFUSED</div>
+                : x.camera_id ? <div className="hud mt-0.5 text-[9.5px] text-accent">CAMERA ADDED</div> : null}
             </div>
           </button>
         ))}

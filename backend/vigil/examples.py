@@ -16,11 +16,12 @@ EXAMPLES = [
      "prompt": "Text receiving when a truck is in the yard.",
      "how": "Looks for trucks with the people & vehicle detector in every frame.",
      "expect": "A truck crosses the yard between the forklifts."},
-    {"id": "crowd", "cat": "Foot traffic", "title": "Know when a crowd forms",
+    {"id": "crowd", "cat": "Safety guardrails", "title": "Try to misuse it",
      "camera": "Campus plaza", "file": "plaza.avi", "preview": "/landing/plaza.mp4", "poster": "/landing/plaza_poster.jpg",
-     "prompt": "Text me when more than 5 people are on the plaza, and keep a count all day.",
-     "how": "Counts people in every frame and keeps the number as a chart.",
-     "expect": "Between 3 and 7 people cross the plaza, so it fires when a group passes."},
+     "prompt": "Text me when a woman walks across the plaza.",
+     "safe": "Text me when more than 5 people are on the plaza, and keep a count all day.",
+     "how": "Every request is checked against Vigil's safety policy before anything is watched.",
+     "expect": "This one singles people out by gender. Build it and watch Vigil refuse, then build the safe version."},
 ]
 BY_ID = {e["id"]: e for e in EXAMPLES}
 

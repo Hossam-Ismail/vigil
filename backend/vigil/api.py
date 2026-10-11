@@ -1106,6 +1106,7 @@ def draft_watch(body: WatchDraftIn) -> dict:
                 spec.trigger = "rising"
     dataset = (existing.choose(spec) if not settings.finetune else
                {"state": "pretrained", "classes": coco} if coco else {"state": "searching"})
+    _cam_or_404(cam["id"])   # the camera may have been removed while the request was being understood
     w = S().db.add_watch(cam["id"], spec.name, prompt, spec.model_dump(), status="draft")
     S().db.update_watch(w["id"], metrics={"compile": {"brain": brain.label, "ms": compile_ms, "zone": zinfo,
                                                       "warnings": warnings}, "dataset": dataset})

@@ -379,7 +379,7 @@ export function NewWatch() {
             <WatchPlan watchId={watch.id} spec={spec} onChange={setSpec} cam={cam} dataset={dataset} />
             <div className="mt-6 flex items-center gap-2">
               <Button variant="primary" loading={busy} onClick={startBuild} icon={<Wand2 className="size-4" />}>
-                Train &amp; start watching
+                Start watching
               </Button>
               <Button variant="ghost" onClick={discard}>Discard</Button>
             </div>

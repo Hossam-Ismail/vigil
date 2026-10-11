@@ -12,6 +12,7 @@ export function LiveImage({ cameraId, fps = 5, className, paused }: { cameraId: 
     alive.current = true
     let timer: ReturnType<typeof setTimeout>
     const period = 1000 / fps
+    let misses = 0
     const next = () => {
       if (!alive.current) return
       const started = performance.now()
@@ -21,12 +22,14 @@ export function LiveImage({ cameraId, fps = 5, className, paused }: { cameraId: 
         if (!alive.current) return
         setSrc(url)
         setFailed(false)
+        misses = 0
         timer = setTimeout(next, Math.max(0, period - (performance.now() - started)))
       }
       img.onerror = () => {
         if (!alive.current) return
         setFailed(true)
-        timer = setTimeout(next, 1500)
+        misses += 1
+        timer = setTimeout(next, Math.min(1500 * misses, 6000))   // no video yet: ask less and less often
       }
       img.src = url
     }

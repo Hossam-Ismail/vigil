@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 import threading
 from dataclasses import asdict, dataclass, field
 
@@ -119,7 +120,10 @@ _STOP = {"a", "an", "the", "someone", "somebody", "anyone", "anybody", "person",
 def _kinetics_labels() -> list[str]:
     from transformers import AutoConfig
 
-    cfg = AutoConfig.from_pretrained(BY_ID["actions"].repo)
+    try:   # the copy already on disk first: no network, no waiting on a busy machine
+        cfg = AutoConfig.from_pretrained(BY_ID["actions"].repo, local_files_only=True)
+    except Exception:  # noqa: BLE001
+        cfg = AutoConfig.from_pretrained(BY_ID["actions"].repo)
     return [cfg.id2label[i] for i in range(len(cfg.id2label))]
 
 
@@ -127,14 +131,20 @@ _labels_cache: list[str] | None = None
 
 
 def kinetics_labels() -> list[str]:
+    """The 400 action names. A failed read (e.g. while the model files are being refreshed at start-up) is
+    retried a few times and never remembered as "no actions"."""
     global _labels_cache
     if _labels_cache is None:
-        try:
-            _labels_cache = _kinetics_labels()
-        except Exception:  # noqa: BLE001
-            log.warning("could not read the action labels")
-            _labels_cache = []
-    return _labels_cache
+        for attempt in range(4):
+            try:
+                _labels_cache = _kinetics_labels()
+                break
+            except Exception:  # noqa: BLE001
+                if attempt == 3:
+                    log.warning("could not read the action labels; will try again next time", exc_info=True)
+                else:
+                    time.sleep(0.75)
+    return _labels_cache or []
 
 
 def _words(text: str) -> set[str]:

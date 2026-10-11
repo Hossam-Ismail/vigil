@@ -36,6 +36,8 @@ class Notifier:
             if not only and (not ch.get("enabled", True) or
                              SEVERITY_RANK[severity] < SEVERITY_RANK.get(ch.get("min_severity", "info"), 0)):
                 continue
+            if ch["type"] != "desktop" and not str(ch.get("target", "")).strip():
+                continue   # a channel added in Settings but never given a topic / URL
             try:
                 getattr(self, f"_{ch['type']}")(ch, event, watch, camera, snapshot, severity)
                 results.append({"channel": ch["id"], "ok": True})

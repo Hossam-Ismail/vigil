@@ -73,8 +73,8 @@ export function CameraView({ cameraId, aspect = 16 / 9, watches = [], focusWatch
   const focusRt = focusWatchId ? rtById.get(focusWatchId) : undefined
 
   return (
-    <div className={cx('scanlines relative w-full overflow-hidden bg-black', rounded && 'rounded-lg', className)} style={{ aspectRatio: String(aspect) }}>
-      <LiveImage cameraId={cameraId} fps={fps} className="feed-mono absolute inset-0 h-full w-full" />
+    <div className={cx('relative w-full overflow-hidden bg-black', rounded && 'rounded-lg', className)} style={{ aspectRatio: String(aspect) }}>
+      <LiveImage cameraId={cameraId} fps={fps} className="absolute inset-0 h-full w-full" />
       <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1 1" preserveAspectRatio="none">
         {shown.map((w) =>
           w.spec.zone ? <ZoneShape key={w.id} zone={w.spec.zone} color={tone(rtById.get(w.id))} dashed={w.status !== 'active'} /> : null,

@@ -18,8 +18,15 @@ const EXAMPLES = [
   'Text me when a parking spot opens up in the front row',
 ]
 
+/** A request handed over from the marketing site's demo (?prompt=…&cam=<part of a camera name>), read once. */
+function handedOver() {
+  const q = new URLSearchParams(window.location.search)
+  return { prompt: q.get('prompt') ?? '', cam: (q.get('cam') ?? '').toLowerCase() }
+}
+
 export function PromptBar({ cameras, defaultCamera, compact }: { cameras: Camera[]; defaultCamera?: number; compact?: boolean }) {
-  const [text, setText] = useState('')
+  const [hand] = useState(handedOver)
+  const [text, setText] = useState(hand.prompt)
   const [cam, setCam] = useState<number | undefined>(defaultCamera)
   const nav = useNavigate()
   const ref = useRef<HTMLTextAreaElement>(null)
@@ -27,8 +34,14 @@ export function PromptBar({ cameras, defaultCamera, compact }: { cameras: Camera
   const examples = me ? suggestionsFor(me.profile) : EXAMPLES
 
   useEffect(() => {
-    if (cam === undefined && cameras.length) setCam(defaultCamera ?? cameras[0].id)
-  }, [cameras, cam, defaultCamera])
+    if (cam !== undefined || !cameras.length) return
+    const match = hand.cam ? cameras.find((c) => c.name.toLowerCase().includes(hand.cam)) : undefined
+    setCam(defaultCamera ?? match?.id ?? cameras[0].id)
+  }, [cameras, cam, defaultCamera, hand.cam])
+
+  useEffect(() => {
+    if (hand.prompt) ref.current?.focus()
+  }, [hand.prompt])
 
   const submit = () => {
     if (!text.trim() || cam === undefined) return

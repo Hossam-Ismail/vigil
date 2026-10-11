@@ -1,5 +1,6 @@
 import { ArrowRight, Camera, Check, Cpu, Film, Link2, MessageSquare, Monitor, Network, Radio, ShieldCheck, Smartphone, Webhook, X } from 'lucide-react'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Layout'
 import { cx } from '../components/ui'
 import { api } from '../lib/api'
@@ -160,74 +161,162 @@ function Speed() {
 
 /* ------------------------------------------------------------------------------------------------ use cases */
 
-type Tile = { video?: string; img: string; prompt: string; then: string; where: string; tag: string; model: string; big?: boolean }
+type Example = {
+  cat: string; title: string; camera: string; source: string; video?: string; img: string
+  prompt: string; model: string; then: string; camHint?: string
+}
 
-const TILES: Tile[] = [
-  { video: '/landing/parking_vigil.mp4', img: '/landing/parking_vigil_poster.jpg', big: true, tag: 'SPOT OPENED · TEXTED', model: 'A yes/no check on every space, twice a second',
-    prompt: 'Text me the moment a car pulls out of a spot, so I can send the next van in', then: 'iMessage, or update the “spaces free” sign by webhook', where: 'Aerial parking lot · real video, 2× speed' },
-  { video: '/landing/smoking.mp4', img: '/landing/smoking_poster.jpg', tag: 'SMOKING · CONFIRMED', model: 'Action recognition on 2-second clips (400 human actions)',
-    prompt: 'Text me if anyone smokes by the service door', then: 'iMessage with the photo, faces blurred', where: 'Service entrance · real video' },
-  { img: '/landing/hardhat.jpg', tag: 'NO HARD HAT · 1 OF 2', model: 'A hard-hat detector, then a check on each head',
-    prompt: 'Tell the shift lead if anyone at the pump has no hard hat', then: 'iMessage the lead', where: 'Pump station CCTV · real frame' },
-  { video: '/landing/yard.mp4', img: '/landing/yard.jpg', tag: 'TRUCK · TRACKING', model: 'People & vehicle detector, 41 ms a frame',
-    prompt: 'When a truck pulls into the yard, text receiving and log it in HubSpot', then: 'iMessage + HubSpot task', where: 'Lumber yard · real drone video' },
-  { img: '/landing/plaza.jpg', tag: '6 PEOPLE', model: 'People counter, kept as a metric all day',
-    prompt: 'How many people are on the plaza right now?', then: 'a live count, charted all day', where: 'Campus camera · real frame' },
+/** Each one is real footage; the brackets and labels in the parking clip are Vigil's own output. */
+const EXAMPLES: Example[] = [
+  { cat: 'Parking', title: 'Send the next van the moment a spot opens.', camera: 'Aerial lot camera', source: 'Real video · 2×',
+    video: '/landing/parking_vigil.mp4', img: '/landing/parking_vigil_poster.jpg', camHint: 'parking',
+    prompt: 'Text me the moment a car pulls out of a spot, so I can send the next delivery van in.',
+    model: 'A yes/no check on every space, twice a second', then: 'iMessage, or update the “spaces free” sign by webhook' },
+  { cat: 'Safety', title: 'Catch smoking by the service door.', camera: 'Service entrance', source: 'Real video',
+    video: '/landing/smoking.mp4', img: '/landing/smoking_poster.jpg', camHint: 'service',
+    prompt: 'Text me if anyone smokes by the service door, with the photo.',
+    model: 'Action recognition on 2-second clips (400 human actions)', then: 'iMessage with the photo, faces blurred' },
+  { cat: 'Logistics & yards', title: 'Log every truck that pulls in.', camera: 'Yard drone', source: 'Real video',
+    video: '/landing/yard.mp4', img: '/landing/yard.jpg',
+    prompt: 'When a truck pulls into the yard, text receiving and log the arrival in HubSpot.',
+    model: 'People & vehicle detector, 41 ms a frame', then: 'iMessage to receiving + a HubSpot task' },
+  { cat: 'Foot traffic', title: 'Know when a crowd forms.', camera: 'Campus plaza', source: 'Real video',
+    video: '/landing/plaza.mp4', img: '/landing/plaza_poster.jpg',
+    prompt: 'Count the people on the plaza all day, and text me if more than 10 gather.',
+    model: 'People counter, kept as a metric all day', then: 'a live chart, plus an iMessage past 10' },
+  { cat: 'Construction', title: 'Check hard hats before work begins.', camera: 'Pump station CCTV', source: 'Real frame',
+    img: '/landing/hardhat.jpg',
+    prompt: 'Text the shift lead if anyone at the pump isn’t wearing a hard hat.',
+    model: 'A hard-hat detector, then a check on each head', then: 'iMessage the shift lead with the photo' },
 ]
 
-/** OpenVector-style switcher: each real clip walks through prompt → model → double-check → follow-up, then moves on. */
-function Switcher() {
+type Step = { label: string; detail?: string; bad?: boolean }
+
+/** OpenVector-style demo: real footage, an editable prompt, and a build that runs the real safety check before it
+ *  hands the request to the app. Examples advance on their own until someone starts editing or building. */
+function BuildDemo({ onOpen }: { onOpen: (prompt: string, camHint?: string) => void }) {
   const [i, setI] = useState(0)
-  const [hold, setHold] = useState(false)
+  const [prompt, setPrompt] = useState(EXAMPLES[0].prompt)
+  const [hover, setHover] = useState(false)
+  const [engaged, setEngaged] = useState(false)
+  const [steps, setSteps] = useState<Step[]>([])
+  const [phase, setPhase] = useState<'idle' | 'building' | 'built' | 'refused'>('idle')
   const [ref, seen] = useInView<HTMLDivElement>()
-  const [step, setStep] = useState(0)
+  const ex = EXAMPLES[i]
+  const preset = prompt.trim() === ex.prompt
+
+  const pick = (k: number) => { setI(k); setPrompt(EXAMPLES[k].prompt); setSteps([]); setPhase('idle') }
+
   useEffect(() => {
-    if (!seen) return
-    if (reduced()) { setStep(4); return }
-    setStep(0)
-    const ids = [250, 1000, 1900, 2800].map((ms, k) => setTimeout(() => setStep(k + 1), ms))
-    const next = hold ? undefined : setTimeout(() => setI((x) => (x + 1) % TILES.length), 7000)
-    return () => { ids.forEach(clearTimeout); if (next) clearTimeout(next) }
-  }, [i, seen, hold])
-  const t = TILES[i]
-  const row = (k: number, label: string, body: ReactNode) => (
-    <div className={cx('flex gap-3 transition-all duration-500', step >= k ? 'translate-x-0 opacity-100' : 'translate-x-2 opacity-0')}>
-      <span className="hud w-[92px] shrink-0 pt-0.5 text-[10px] text-muted">{label}</span>
-      <div className="text-[14px] leading-snug">{body}</div>
-    </div>
-  )
+    if (!seen || hover || engaged || reduced()) return
+    const id = setTimeout(() => pick((i + 1) % EXAMPLES.length), 9000)
+    return () => clearTimeout(id)
+  }, [i, seen, hover, engaged])
+
+  const build = async () => {
+    const q = prompt.trim()
+    if (!q || phase === 'building') return
+    setEngaged(true); setPhase('building'); setSteps([])
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, reduced() ? 0 : ms))
+    const add = (st: Step) => setSteps((x) => [...x, st])
+    add({ label: 'Checking it against the safety policy' })
+    let v: { allowed: boolean; reason: string; suggestion: string } | null = null
+    try { v = await api.post('/api/safety/check', { text: q }) } catch { v = null }
+    if (v && !v.allowed) {
+      setSteps([{ label: 'Refused by the safety policy', detail: v.reason, bad: true }])
+      if (v.suggestion) setPrompt(v.suggestion)
+      setPhase('refused')
+      return
+    }
+    setSteps([{ label: 'Passed the safety check', detail: 'Watches an event, not a person' }])
+    await wait(550)
+    add({ label: 'Understood the request', detail: 'what to look for, how long it must last, who to tell' })
+    await wait(650)
+    add(preset ? { label: 'Picked the model', detail: ex.model } : { label: 'Ready to pick the model', detail: 'Vigil matches it to the right vision model on your camera' })
+    await wait(650)
+    add({ label: 'Double-check before every alert', detail: 'a second AI confirms the moment first, about 4 s' })
+    await wait(650)
+    add({ label: 'Then', detail: preset ? ex.then : 'your iMessage, HubSpot, Slack or webhook' })
+    setPhase('built')
+  }
+
   return (
-    <div ref={ref} className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.6fr)]" onMouseEnter={() => setHold(true)} onMouseLeave={() => setHold(false)}>
-      <div className="flex flex-col gap-2" role="tablist" aria-label="Use cases">
-        {TILES.map((x, k) => (
-          <button key={x.prompt} role="tab" aria-selected={k === i} onClick={() => setI(k)}
-            className={cx('relative overflow-hidden rounded-xl border px-4 py-3.5 text-left transition-colors duration-300',
-              k === i ? 'border-accent/60 bg-panel-2' : 'border-line bg-panel hover:border-line-2')}>
-            <div className="hud text-[10px] text-muted">{x.where}</div>
-            <div className={cx('mt-1 text-[15px] leading-snug', k === i ? 'text-ink' : 'text-ink-2')}>“{x.prompt}”</div>
-            {k === i && <span key={`${i}-${hold}`} className={cx('absolute bottom-0 left-0 h-0.5 bg-accent', hold ? 'w-full' : 'progress-7s')} />}
+    <div ref={ref} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+        {/* the camera */}
+        <div className="relative self-start overflow-hidden rounded-2xl border border-line bg-black">
+          <div className="hud absolute inset-x-0 top-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent px-4 py-3 text-[10.5px] text-white/80">
+            <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-accent live-dot" />{ex.camera}</span>
+            <span className="shrink-0"><span className="hidden sm:inline">{ex.cat} · </span>{ex.source}</span>
+          </div>
+          <div className="relative aspect-[16/10]">
+            {EXAMPLES.map((x, k) => (
+              <div key={x.cat} className={cx('absolute inset-0 transition-opacity duration-700', k === i ? 'opacity-100' : 'opacity-0')} aria-hidden={k !== i}>
+                {x.video ? <LoopVideo src={x.video} poster={x.img} label={`${x.camera}, ${x.source}`} className="h-full w-full object-cover" />
+                  : <img src={x.img} alt={`${x.camera}, ${x.source}`} className={cx('h-full w-full object-cover', k === i && 'kenburns')} loading="lazy" />}
+              </div>
+            ))}
+            <span className="brackets pointer-events-none absolute inset-4" />
+            <span key={`s${i}`} className="sweep" />
+            {phase !== 'idle' && (
+              <div className="absolute inset-x-4 bottom-5 flex justify-center">
+                <span className={cx('hud slide-in flex items-center gap-2 rounded-md px-3 py-1.5 text-[11px]',
+                  phase === 'refused' ? 'bg-alert text-white' : phase === 'built' ? 'bg-accent text-accent-ink' : 'bg-black/75 text-accent')}>
+                  {phase === 'building' && <span className="size-1.5 rounded-full bg-accent live-dot" />}
+                  {phase === 'refused' ? 'REFUSED · NOTHING IS WATCHED' : phase === 'built' ? 'WATCH READY · OPEN IT ON A LIVE CAMERA' : 'BUILDING THE WATCH…'}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* the prompt and the build */}
+        <div className="flex flex-col">
+          <label htmlFor="demo-prompt" className="text-[14px] text-ink-2">Your prompt</label>
+          <textarea id="demo-prompt" value={prompt} rows={4} maxLength={300}
+            onChange={(e) => { setPrompt(e.target.value); setEngaged(true); setPhase('idle'); setSteps([]) }}
+            onFocus={() => setEngaged(true)}
+            className="mt-2 resize-none rounded-xl border-2 border-line-2 bg-bg p-4 text-[17px] leading-relaxed outline-none transition-colors focus:border-accent" />
+          <div className="mt-2 text-[12.5px] text-muted">{preset ? 'Preset task · edit it or write your own' : 'Your own request · it goes through the real safety check'}</div>
+          <button onClick={build} disabled={phase === 'building' || !prompt.trim()}
+            className="hud mt-4 flex min-h-[54px] items-center justify-between bg-accent px-5 text-accent-ink transition-[filter,transform] hover:brightness-110 active:translate-y-px disabled:opacity-70">
+            {phase === 'building' ? 'Building…' : 'Build this watch'} <ArrowRight className="size-4" />
+          </button>
+          <ol className="mt-4 flex flex-col gap-2.5" aria-live="polite">
+            {steps.map((st, k) => (
+              <li key={k} className="slide-in flex gap-2.5 text-[13.5px]">
+                <span className={cx('mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full', st.bad ? 'bg-alert text-white' : 'bg-accent text-accent-ink')}>
+                  {st.bad ? <X className="size-3" /> : <Check className="size-3" />}
+                </span>
+                <span><span className={st.bad ? 'text-alert' : 'text-ink'}>{st.label}</span>{st.detail && <span className="text-muted"> · {st.detail}</span>}</span>
+              </li>
+            ))}
+            {phase === 'building' && <li className="flex items-center gap-2.5 text-[13.5px] text-muted"><span className="size-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />working…</li>}
+          </ol>
+          {phase === 'refused' && <div className="slide-in mt-3 text-[13px] text-ink-2">We put a safer version in the box. Build that instead.</div>}
+          {phase === 'built' && (
+            <button onClick={() => onOpen(prompt.trim(), preset ? ex.camHint : undefined)}
+              className="slide-in hud mt-4 flex min-h-[50px] items-center justify-between border border-accent px-5 text-accent transition-colors hover:bg-accent hover:text-accent-ink">
+              Open it on a live camera <ArrowRight className="size-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* the examples */}
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" role="tablist" aria-label="Examples">
+        {EXAMPLES.map((x, k) => (
+          <button key={x.cat} role="tab" aria-selected={k === i} onClick={() => { pick(k); setEngaged(false) }} className="group text-left">
+            <div className={cx('relative aspect-[16/9] overflow-hidden rounded-lg border transition-colors', k === i ? 'border-accent' : 'border-line group-hover:border-line-2')}>
+              <img src={x.img} alt="" className={cx('h-full w-full object-cover transition-[filter,transform] duration-500 group-hover:scale-[1.04]', k === i ? '' : 'brightness-75 grayscale-[35%]')} loading="lazy" />
+            </div>
+            <div className="mt-2 text-[12px] text-muted">{x.cat}</div>
+            <div className={cx('mt-0.5 text-[14px] leading-snug transition-colors', k === i ? 'text-ink' : 'text-ink-2 group-hover:text-ink')}>{x.title}</div>
+            <div className="mt-2 h-0.5 overflow-hidden rounded bg-line">
+              {k === i && <div key={`${i}-${hover}-${engaged}`} className={cx('h-full bg-accent', hover || engaged ? 'w-full' : 'progress-9s')} />}
+            </div>
           </button>
         ))}
-      </div>
-      <div className="relative order-first min-h-[420px] overflow-hidden rounded-2xl border border-line bg-black lg:order-none">
-        {TILES.map((x, k) => (
-          <div key={x.prompt} className={cx('absolute inset-0 transition-opacity duration-700', k === i ? 'opacity-100' : 'opacity-0')} aria-hidden={k !== i}>
-            {x.video ? <LoopVideo src={x.video} poster={x.img} label={x.where} className="h-full w-full object-cover" />
-              : <img src={x.img} alt={x.where} loading="lazy" className="h-full w-full object-cover" />}
-          </div>
-        ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
-        <span className="brackets pointer-events-none absolute inset-4" />
-        <span key={i} className="sweep" />
-        <span className="hud absolute left-5 top-5 flex items-center gap-1.5 rounded bg-black/65 px-2 py-1 text-[10px] text-accent">
-          <span className="size-1.5 rounded-full bg-accent live-dot" />{t.tag}
-        </span>
-        <div className="absolute inset-x-0 bottom-0 flex flex-col gap-2.5 p-5 text-white md:p-6">
-          {row(1, 'YOU SAID', <span className="text-[16px] font-medium">“{t.prompt}”</span>)}
-          {row(2, 'VIGIL PICKED', t.model)}
-          {row(3, 'DOUBLE-CHECK', 'A second AI looked at the moment and confirmed it')}
-          {row(4, 'THEN', <span className="text-accent">→ {t.then}</span>)}
-        </div>
       </div>
     </div>
   )
@@ -244,13 +333,13 @@ const MORE: [string, string, string][] = [
   ['Fitness', 'Text me when someone does push-ups.', 'iMessage with the photo'],
 ]
 
-function UseCases() {
+function UseCases({ onOpen }: { onOpen: (prompt: string, camHint?: string) => void }) {
   return (
     <section id="cases" className={cx(W, 'scroll-mt-20 py-24')}>
-      <Eyebrow>USE CASES · REAL CAMERAS</Eyebrow>
+      <Eyebrow>LIVE DEMO · REAL CAMERAS</Eyebrow>
       <H2>What do you still check by hand?</H2>
-      <Reveal delay={120}><p className="mt-5 max-w-[620px] text-[17px] leading-relaxed text-ink-2">Every clip and frame below is real camera footage, and the brackets and labels in it are Vigil's own calls.</p></Reveal>
-      <Reveal delay={120} className="mt-12"><Switcher /></Reveal>
+      <Reveal delay={120}><p className="mt-5 max-w-[640px] text-[17px] leading-relaxed text-ink-2">Examples advance after each clip. Pick one, edit the prompt or write your own, and build it. Every clip is real camera footage.</p></Reveal>
+      <Reveal delay={120} className="mt-12"><BuildDemo onOpen={onOpen} /></Reveal>
       <Reveal className="mt-12 overflow-hidden rounded-2xl border border-line">
         <div className="hud border-b border-line bg-panel px-5 py-3 text-[10.5px] text-muted">ONE SENTENCE IN · THE FOLLOW-UP OUT</div>
         <ul className="divide-y divide-line">
@@ -743,7 +832,7 @@ function HowSteps() {
 
 /** What a signed-out visitor sees first. */
 export function Landing({ onSignIn }: { onSignIn: () => void }) {
-  const { setMe } = useAuth()
+  const { me, setMe } = useAuth()
   const [busy, setBusy] = useState(false)
   const demo = async () => {
     setBusy(true)
@@ -752,6 +841,18 @@ export function Landing({ onSignIn }: { onSignIn: () => void }) {
     } finally {
       setBusy(false)
     }
+  }
+  const nav = useNavigate()
+  const openInApp = async (prompt: string, camHint?: string) => {
+    const q = new URLSearchParams({ prompt, ...(camHint ? { cam: camHint } : {}) })
+    if (!me) {
+      try {
+        setMe((await api.post<{ user: Me }>('/api/auth/login', { email: 'test', password: '123' })).user)
+      } catch {
+        return
+      }
+    }
+    nav(`/?${q.toString()}`)
   }
   const primary = 'hud inline-flex min-h-[52px] items-center gap-2 px-6 transition-[filter,transform] duration-150 hover:brightness-110 active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-70'
   const ctas = (
@@ -825,7 +926,7 @@ export function Landing({ onSignIn }: { onSignIn: () => void }) {
 
       <HowSteps />
       <Speed />
-      <UseCases />
+      <UseCases onOpen={openInApp} />
       <Spotlight />
       <IMessage />
       <FollowUp />

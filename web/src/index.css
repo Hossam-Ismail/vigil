@@ -209,3 +209,8 @@ body {
 @keyframes progress { from { width: 0; } to { width: 100%; } }
 .progress-7s { animation: progress 7s linear both; }
 @media (prefers-reduced-motion: reduce) { .progress-7s { animation: none; width: 100%; } }
+
+.progress-9s { animation: progress 9s linear both; }
+@keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.08) translate(-1%, -1%); } }
+.kenburns { animation: kenburns 9s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .progress-9s { animation: none; width: 100%; } .kenburns { animation: none; } }

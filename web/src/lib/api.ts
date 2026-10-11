@@ -152,7 +152,9 @@ export type DatasetPlan = {
 }
 
 export type DatasetInfo = {
-  state: 'searching' | 'found' | 'none' | 'off' | 'too_small' | 'trained' | 'pretrained'
+  state: 'searching' | 'found' | 'none' | 'off' | 'too_small' | 'trained' | 'pretrained' | 'existing'
+  models?: { name: string; url: string; trained_on: string }[]
+  how?: string
   classes?: string[]
   message?: string
   plan?: DatasetPlan | null

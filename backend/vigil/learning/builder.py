@@ -101,6 +101,22 @@ class BuildJob:
             self.db.update_watch(self.wid, status="error", status_detail=str(exc)[:300])
             bus.publish("build", {"watch_id": self.wid, "stage": "error", "progress": 1, "message": str(exc)[:300]})
 
+    def _go_live_existing(self, spec: WatchSpec) -> None:
+        """Run on an existing model as-is: no frames collected, nothing labeled, nothing trained."""
+        from . import existing
+        from . import finetune as ft
+
+        (ft.root(self.wid) / "model.json").unlink(missing_ok=True)  # never a leftover fine-tuned model
+        choice = existing.choose(spec)
+        names = " + ".join(m["name"] for m in choice["models"])
+        metrics = {"mode": "existing", "dataset": choice, "trained_at": time.time()}
+        self._merge_metrics(**metrics)
+        detail = f"live on {names}, no training: {choice['how']}"
+        self.db.update_watch(self.wid, status="active", status_detail=detail)
+        bus.publish("build", {"watch_id": self.wid, "stage": "done", "progress": 1.0, "message": detail,
+                              "metrics": metrics})
+        self.on_done(self.wid)
+
     def _build_finetuned(self, watch: dict, spec: WatchSpec, brain) -> bool:
         """Find public data for this request, fine-tune the watch's own model on it, and go live.
 
@@ -244,7 +260,10 @@ class BuildJob:
             return
         spec = WatchSpec.model_validate(watch["spec"])
         brain = get_brain()
-        if settings.finetune and self._build_finetuned(watch, spec, brain):
+        if not settings.finetune:
+            self._go_live_existing(spec)
+            return
+        if self._build_finetuned(watch, spec, brain):
             return
         self._progress("collect", 0.0, "gathering frames")
         frames = self._collect_frames()

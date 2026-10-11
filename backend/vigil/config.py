@@ -51,8 +51,9 @@ class Settings:
     # Learning
     label_budget: int = field(default_factory=lambda: int(_env("VIGIL_LABEL_BUDGET", "40")))
     collect_seconds: float = field(default_factory=lambda: float(_env("VIGIL_COLLECT_SECONDS", "15")))
-    # every watch gets its own model fine-tuned on public data (off: the older embedding head on camera frames)
-    finetune: bool = field(default_factory=lambda: _env("VIGIL_FINETUNE", "1") not in ("0", "false", "no"))
+    # off (default): every watch runs on an existing, already-trained model, live instantly, no training at all.
+    # on: a model is fine-tuned per watch on public data (minutes of GPU per watch)
+    finetune: bool = field(default_factory=lambda: _env("VIGIL_FINETUNE", "0") not in ("0", "false", "no"))
     finetune_epochs: int = field(default_factory=lambda: int(_env("VIGIL_FINETUNE_EPOCHS", "6")))
     finetune_images: int = field(default_factory=lambda: int(_env("VIGIL_FINETUNE_IMAGES", "450")))
     active_learning_per_hour: int = field(default_factory=lambda: int(_env("VIGIL_ACTIVE_LEARNING_PER_HOUR", "12")))

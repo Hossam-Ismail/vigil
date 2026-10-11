@@ -1,6 +1,6 @@
 import { BrainCircuit, ChevronDown, Database, ExternalLink, Repeat, Search, Zap } from 'lucide-react'
-import type { ReactNode } from 'react'
-import type { Camera, DatasetInfo, WatchSpec } from '../lib/api'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { api, type Camera, type DatasetInfo, type WatchSpec } from '../lib/api'
 import { ActionsEditor } from './ActionsEditor'
 import { PlanEditor } from './PlanEditor'
 import { cx, inputCls, Spinner } from './ui'
@@ -30,8 +30,9 @@ export function WatchPlan({ watchId, spec, onChange, cam, dataset }: {
         <div className="mt-1.5 text-[12px] text-muted">on {cam?.name ?? 'this camera'}, anywhere in view</div>
       </Section>
 
-      <Section icon={<BrainCircuit className="size-4" />} title="Vigil trains a model for this">
+      <Section icon={<BrainCircuit className="size-4" />} title={dataset?.state === 'existing' ? 'Model' : 'Vigil trains a model for this'}>
         <Dataset watchId={watchId} d={dataset} />
+        <LivePreview watchId={watchId} spec={spec} />
       </Section>
 
       <Section icon={<Zap className="size-4" />} title="When it happens">
@@ -75,7 +76,74 @@ function Section({ icon, title, children }: { icon: ReactNode; title: string; ch
   )
 }
 
+type Preview = { kind: string; yes?: number | null; count?: number; found?: number; question?: string; answer: boolean; ms: number }
+
+/** What the watch would answer on the camera right now, refreshed every 2 seconds, so you can check it before launch. */
+function LivePreview({ watchId, spec }: { watchId: number; spec: WatchSpec }) {
+  const [r, setR] = useState<Preview | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+  const specRef = useRef(spec)
+  specRef.current = spec
+  useEffect(() => {
+    let alive = true
+    let busy = false
+    const tick = async () => {
+      if (busy) return
+      busy = true
+      try {
+        const out = await api.post<Preview>(
+          `/api/watches/${watchId}/preview`, { spec: specRef.current })
+        if (alive) { setR(out); setErr(null) }
+      } catch (e) {
+        if (alive) setErr((e as Error).message)
+      } finally {
+        busy = false
+      }
+    }
+    tick()
+    const t = setInterval(tick, 2000)
+    return () => { alive = false; clearInterval(t) }
+  }, [watchId])
+  return (
+    <div className="mt-2 flex items-center gap-3 rounded-lg border border-line bg-panel-2 px-3 py-2.5 text-[13px]">
+      <span className="relative flex size-2.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60" /><span className="relative inline-flex size-2.5 rounded-full bg-accent" /></span>
+      <span className="text-muted">Right now on your camera:</span>
+      {err ? <span className="text-alert">{err}</span> : !r ? <span className="text-muted">checking…</span> : r.kind === 'state' ? (
+        <span className={cx('font-semibold', r.answer ? 'text-alert' : 'text-ok')}>
+          {r.answer ? 'YES' : 'NO'} <span className="font-normal text-muted">({Math.round(100 * (r.answer ? r.yes ?? 0 : 1 - (r.yes ?? 0)))}% sure)</span>
+        </span>
+      ) : r.question ? (
+        <span className={cx('font-semibold', r.answer ? 'text-alert' : 'text-ok')}>
+          {r.answer ? 'YES' : 'NO'}{' '}
+          <span className="font-normal text-muted">({r.found} found{r.yes !== null && r.yes !== undefined ? `, best ${Math.round(100 * r.yes)}% yes` : ''})</span>
+        </span>
+      ) : (
+        <span className="font-semibold">{r.count} found</span>
+      )}
+      {r && <span className="num ml-auto text-[11.5px] text-muted">{Math.round(r.ms)} ms</span>}
+    </div>
+  )
+}
+
 function Dataset({ watchId, d }: { watchId: number; d?: DatasetInfo }) {
+  if (d?.state === 'existing') {
+    return (
+      <div className="rounded-lg border border-accent/40 bg-panel-2 p-3 text-[13px]">
+        <div className="flex items-start gap-2">
+          <Database className="mt-0.5 size-4 shrink-0 text-accent" />
+          <div>
+            <div>
+              Ready instantly on {(d.models ?? []).map((m, i) => (
+                <span key={m.name}>{i > 0 && ' + '}<a href={m.url} target="_blank" rel="noreferrer" className="font-medium text-ink underline decoration-line-2 underline-offset-2">{m.name}</a></span>
+              ))}. No training.
+            </div>
+            <div className="mt-1 text-[12px] text-muted">{d.how}</div>
+            <div className="mt-1 text-[11.5px] text-muted">{(d.models ?? []).map((m) => `${m.name}: trained on ${m.trained_on}`).join(' · ')}</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
   if (!d || d.state === 'searching') {
     return (
       <div className="rounded-lg border border-line bg-panel-2 p-3 text-[13px]">

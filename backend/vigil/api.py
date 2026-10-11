@@ -35,7 +35,7 @@ from .learning.active import ActiveLearner
 from .learning.locate import propose_zone
 from .learning.store import ModelStore, prior_labels
 from .perception.embedder import get_embedder
-from .perception.geometry import zone_crop
+from .perception.geometry import crop, zone_crop
 from .schemas import (
     CameraIn,
     CameraPatch,
@@ -643,6 +643,42 @@ def demo_control(cid: int, bin: str | None = Body(None), level: float | None = B
     return rt.scene.state()
 
 
+@app.post("/api/watches/{wid}/preview")
+def preview_watch(wid: int, spec: WatchSpec | None = Body(None, embed=True)) -> dict:
+    """What the watch would answer on the camera right now (the unsaved spec from the review screen if given)."""
+    w = _watch_or_404(wid)
+    spec = spec or WatchSpec.model_validate(w["spec"])
+    frame = _latest_frame(w["camera_id"])
+    t = time.perf_counter()
+    if spec.kind == "state":
+        emb = get_embedder()
+        w0, b0 = emb.zero_shot_direction(spec.positive_label, spec.negative_label)
+        x = emb.embed_images([zone_crop(frame, spec.zone)])[0]
+        p = float(1 / (1 + np.exp(-(x @ w0 + b0))))
+        out = {"kind": "state", "yes": round(p, 3), "answer": p >= 0.5}
+    else:
+        from .perception.detector import coco_class_for, get_coco, get_owl
+
+        coco = {c: [t] for t in spec.targets if (c := coco_class_for(t))}
+        others = [t for t in spec.targets if not coco_class_for(t)]
+        dets = (get_coco().detect(frame, coco, threshold=0.4) if coco else []) + \
+               (get_owl().detect(frame, others, threshold=0.2) if others else [])
+        found = len(dets)
+        best = None
+        if spec.target_question and dets:
+            # same check the live watch runs: each found object's crop, judged by SigLIP 2 zero-shot
+            emb = get_embedder()
+            w0, b0 = emb.zero_shot_direction(*prior_labels(spec))
+            X = emb.embed_images([crop(frame, d.box, pad=0.12) for d in dets])
+            ps = 1 / (1 + np.exp(-(X @ w0 + b0)))
+            best = round(float(ps.max()), 3)
+            dets = [d for d, q in zip(dets, ps) if q >= 0.5]
+        out = {"kind": spec.kind, "count": len(dets), "found": found, "yes": best,
+               "question": spec.target_question or "", "answer": len(dets) > 0}
+    out["ms"] = round((time.perf_counter() - t) * 1000, 1)
+    return out
+
+
 @app.post("/api/lab/clip")
 def lab_clip(camera_id: int = Body(...), options: list[str] = Body(...), seconds: float = Body(1.5)) -> dict:
     """Test bench: score the last few seconds of a camera against written options with the video-text model,
@@ -829,8 +865,10 @@ def draft_watch(body: WatchDraftIn) -> dict:
         spec.zone = None  # the watch's own model looks at the whole view; the user can still limit it to an area
     if coco:
         spec.target_question = ""
-    dataset = ({"state": "pretrained", "classes": coco} if coco else
-               {"state": "searching" if settings.finetune else "off"})
+    from .learning import existing
+
+    dataset = (existing.choose(spec) if not settings.finetune else
+               {"state": "pretrained", "classes": coco} if coco else {"state": "searching"})
     w = S().db.add_watch(cam["id"], spec.name, prompt, spec.model_dump(), status="draft")
     S().db.update_watch(w["id"], metrics={"compile": {"brain": brain.label, "ms": compile_ms, "zone": zinfo,
                                                       "warnings": warnings}, "dataset": dataset})

@@ -97,6 +97,7 @@ class WatchSpec(BaseModel):
     actions: list[Action] = Field(default_factory=list)
     metric: Metric | None = None  # keep a number over time instead of (or as well as) a yes/no alert
     alerts: bool = True  # False = a metric-only watch: it measures and charts, it never alerts
+    library: dict | None = None  # a prebuilt model from the library: {"id": ..., "yes": [classes that mean YES]}
 
 
 class CameraIn(BaseModel):

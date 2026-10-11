@@ -22,6 +22,15 @@ OWL = {"name": "Google OWLv2", "url": "https://huggingface.co/google/owlv2-base-
 
 def choose(spec: WatchSpec) -> dict:
     """What runs this watch and why, in a form the review screen can show."""
+    if spec.library:
+        from ..perception.library import BY_ID
+
+        m = BY_ID[spec.library["id"]]
+        yes = ", ".join(spec.library.get("yes") or [])
+        return {"state": "existing", "prebuilt": m.id,
+                "models": [{"name": m.name, "url": m.card()["url"], "trained_on": f"{m.repo} ({m.license})"}],
+                "how": f"Prebuilt model from the library. It answers YES on: {yes}."
+                       + (f" Runs in about {m.speed_ms} ms on this Mac." if m.speed_ms else "")}
     if spec.kind == "state":
         return {"state": "existing", "models": [SIGLIP], "how": "Each frame is compared with “" + spec.positive_label
                 + "” versus “" + spec.negative_label + "”; the closer one is the answer."}

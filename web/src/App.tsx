@@ -13,6 +13,7 @@ import { NewWatch } from './pages/NewWatch'
 import { PushCamera } from './pages/PushCamera'
 import { Settings } from './pages/Settings'
 import { Lab } from './pages/Lab'
+import { Library } from './pages/Library'
 import { Onboarding, Welcome } from './pages/Welcome'
 import { WatchDetail } from './pages/WatchDetail'
 import { Watches } from './pages/Watches'
@@ -55,6 +56,7 @@ function AppRoutes() {
           <Route path="cameras/:id" element={<CameraDetail />} />
           <Route path="settings" element={<Settings />} />
           <Route path="lab" element={<Lab />} />
+          <Route path="models" element={<Library />} />
         </Route>
       </Routes>
   )

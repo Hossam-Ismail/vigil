@@ -13,6 +13,7 @@ import threading
 import time
 from collections import defaultdict
 
+import cv2
 import numpy as np
 
 from ..bus import bus
@@ -22,6 +23,7 @@ from ..db import DB
 from ..learning.active import ActiveLearner
 from ..learning.builder import BuildJob
 from ..learning.finetune import TrainedModel
+from ..perception.library import runner_for as library_runner
 from ..learning.heads import Head
 from ..learning.store import ModelStore
 from ..perception.detector import Detection, coco_class_for, get_coco, get_owl
@@ -87,6 +89,13 @@ class CameraAnalyzer:
                     found = [Detection(label, h.conf, h.box, "watch") for h in hits]
                     shown += found
                     trig = rt.step_objects(ts, found, None)
+                elif m.kind == "video":
+                    ring = self.cam.clip_frames(ts - 2.0, ts)
+                    frames = [f for f in (cv2.imdecode(np.frombuffer(j, np.uint8), cv2.IMREAD_COLOR) for _, j in ring)
+                              if f is not None]
+                    if len(frames) < 4:
+                        continue
+                    trig = rt.step_state(ts, p=m.proba_clip(frames), threshold=m.threshold)
                 else:
                     trig = rt.step_state(ts, p=m.proba(zone_crop(frame, rt.spec.zone)), threshold=m.threshold)
             except Exception:  # noqa: BLE001
@@ -215,7 +224,7 @@ class Engine:
     def activate(self, watch: dict) -> WatchRuntime:
         head = self.store.load(watch)
         rt = WatchRuntime(watch, head)
-        rt.model = TrainedModel.load(watch["id"])
+        rt.model = TrainedModel.load(watch["id"]) or library_runner(rt.spec)
         # keep the cooldown across restarts so an ongoing condition does not re-alert on boot
         last = self.db.one("SELECT ts FROM events WHERE watch_id=? AND status != 'suppressed' ORDER BY ts DESC LIMIT 1",
                            (watch["id"],))

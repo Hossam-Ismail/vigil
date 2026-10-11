@@ -90,6 +90,9 @@ class App:
         for cam in self.db.cameras():
             self.hub.start(cam)
         threading.Thread(target=self._warm, daemon=True).start()
+        from .perception import library
+
+        threading.Thread(target=library.prefetch, name="library-prefetch", daemon=True).start()
         self.engine.load_all()
         self.learner.start()
         self.bridge.start()
@@ -787,6 +790,29 @@ def preview_watch(wid: int, spec: WatchSpec | None = Body(None, embed=True)) -> 
     spec = spec or WatchSpec.model_validate(w["spec"])
     frame = _latest_frame(w["camera_id"])
     t = time.perf_counter()
+    from .perception import library
+
+    runner = library.runner_for(spec)
+    if runner is not None:
+        if runner.kind == "detector":
+            hits = [h for h in runner.detect(frame) if h.conf >= runner.threshold]
+            out = {"kind": spec.kind, "count": len(hits), "found": len(hits), "answer": bool(hits),
+                   "yes": round(max((h.conf for h in hits), default=0.0), 3), "question": ", ".join(sorted(runner.yes))}
+        else:
+            if runner.kind == "video":
+                rt = S().hub.get(w["camera_id"])
+                ring = rt.clip_frames(time.time() - 2.0, time.time()) if rt else []
+                frames = [f for f in (cv2.imdecode(np.frombuffer(j, np.uint8), cv2.IMREAD_COLOR) for _, j in ring)
+                          if f is not None] or [frame]
+                p = runner.proba_clip(frames)
+                top = runner.top(frames)
+            else:
+                p, top = runner.proba(zone_crop(frame, spec.zone)), []
+            out = {"kind": "state", "yes": round(p, 3), "answer": p >= runner.threshold,
+                   "top": [[k, round(v, 3)] for k, v in top]}
+        out["model"] = runner.m.name
+        out["ms"] = round((time.perf_counter() - t) * 1000, 1)
+        return out
     if spec.kind == "state":
         emb = get_embedder()
         w0, b0 = emb.zero_shot_direction(spec.positive_label, spec.negative_label)
@@ -814,6 +840,19 @@ def preview_watch(wid: int, spec: WatchSpec | None = Body(None, embed=True)) -> 
                "question": spec.target_question or "", "answer": len(dets) > 0}
     out["ms"] = round((time.perf_counter() - t) * 1000, 1)
     return out
+
+
+@app.get("/api/library")
+def list_library() -> list[dict]:
+    """The prebuilt model library, with download status and which watches use each model."""
+    from .perception import library
+
+    used: dict[str, list[str]] = {}
+    for w in S().db.watches():
+        lid = ((w.get("spec") or {}).get("library") or {}).get("id")
+        if lid:
+            used.setdefault(lid, []).append(w["name"])
+    return [{**m, "watches": used.get(m["id"], [])} for m in library.status()]
 
 
 @app.post("/api/lab/clip")
@@ -1003,7 +1042,24 @@ def draft_watch(body: WatchDraftIn) -> dict:
     if coco:
         spec.target_question = ""
     from .learning import existing
+    from .perception import library
 
+    lib = library.match(f"{prompt} {spec.positive_label}", spec.kind) if not settings.finetune else None
+    if lib:
+        spec.library = lib
+        spec.zone = None
+        spec.crossing = "none"
+        spec.target_question = ""
+        if library.kind_of(lib) == "detector":
+            spec.kind = "count" if spec.kind == "count" else "presence"
+            spec.targets = [library.BY_ID[lib["id"]].name.lower()]
+            if spec.trigger not in ("rising", "sustained", "per_object"):
+                spec.trigger = "rising"
+        else:
+            spec.kind = "state"
+            spec.targets = []
+            if spec.trigger == "per_object":
+                spec.trigger = "rising"
     dataset = (existing.choose(spec) if not settings.finetune else
                {"state": "pretrained", "classes": coco} if coco else {"state": "searching"})
     w = S().db.add_watch(cam["id"], spec.name, prompt, spec.model_dump(), status="draft")

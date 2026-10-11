@@ -88,6 +88,8 @@ const BY_USE: Record<string, string[]> = {
 /** Example prompts for this person's use, with the things they told us they want first. */
 export function suggestionsFor(p: Profile | undefined): string[] {
   const base = BY_USE[p?.use ?? ''] ?? BY_USE.business
-  const own = (p?.goals ?? '').split(/[\n.;]+/).map((s) => s.trim()).filter((s) => s.length > 8).slice(0, 2)
+  // the user's own goals only when they read like a request ("text me when…"), never account notes
+  const own = (p?.goals ?? '').split(/[\n.;]+/).map((s) => s.trim())
+    .filter((s) => s.length > 8 && /\b(when|if|text|tell|alert|notify|count|how many|watch)\b/i.test(s)).slice(0, 2)
   return [...own, ...base]
 }

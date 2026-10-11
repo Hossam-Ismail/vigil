@@ -44,20 +44,20 @@ export function EventRow({ e, onOpen, onChange, hideWatch }: { e: VEvent; onOpen
     <div
       role={onOpen ? 'button' : undefined}
       onClick={() => onOpen?.(e)}
-      className={cx('flex items-center gap-3 px-3 py-2.5', onOpen && 'cursor-pointer hover:bg-panel-2', e.status === 'suppressed' && 'opacity-60')}
+      className={cx('flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 sm:flex-nowrap', onOpen && 'cursor-pointer hover:bg-panel-2', e.status === 'suppressed' && 'opacity-60')}
     >
       <div className="relative shrink-0">
         {e.snapshot_path ? (
-          <img src={media(e.snapshot_path)} alt="" className="h-14 w-24 rounded-md object-cover bg-panel-2" loading="lazy" />
+          <img src={media(e.snapshot_path)} alt="" className="h-12 w-20 rounded-md object-cover bg-panel-2 sm:h-14 sm:w-24" loading="lazy" />
         ) : (
-          <div className="h-14 w-24 rounded-md bg-panel-2" />
+          <div className="h-12 w-20 rounded-md bg-panel-2 sm:h-14 sm:w-24" />
         )}
         {e.clip_path && <Film className="absolute bottom-1 right-1 size-3.5 text-white drop-shadow" />}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="truncate text-[13.5px] font-medium">{e.message}</span>
-          <EventPill status={e.status} />
+          <span className="shrink-0 whitespace-nowrap"><EventPill status={e.status} /></span>
         </div>
         <div className="truncate text-[12px] text-muted">
           {!hideWatch && <>{e.watch_name} · </>}
@@ -70,7 +70,10 @@ export function EventRow({ e, onOpen, onChange, hideWatch }: { e: VEvent; onOpen
           </div>
         )}
       </div>
-      <FeedbackButtons e={e} onChange={onChange} />
+      {/* on phones the buttons get their own line under the text instead of squeezing it */}
+      <div className="flex w-full justify-end sm:w-auto">
+        <FeedbackButtons e={e} onChange={onChange} />
+      </div>
     </div>
   )
 }

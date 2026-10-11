@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 
 from ..perception.geometry import Box
+from ..safety import POLICY_PROMPT
 
 
 @dataclass
@@ -112,9 +113,22 @@ Field guidance:
   "log it in HubSpot" / "open a ticket" / "update the CRM" → hubspot with object ticket, task or note;
   "post in Slack" → slack; "call my webhook" / "tell our system" → webhook. Empty list when the request names
   no follow-up (Vigil always records the alert). Put any detail worth passing on in `note`.
+- metric: when the request asks to count, measure or track a number over time instead of (or as well as)
+  being alerted ("how many people are waiting", "count walk-ins per hour", "what % of the shift is the
+  staging area empty", "track how busy the lot is"), set kind to "count" (objects in the zone right now; use a
+  count watch), "crossings" (objects crossing a line, e.g. walk-ins; use a presence watch with a crossing) or
+  "occupancy" (share of time the yes/no answer is YES; use the watch kind that answers it), a short name for
+  the number ("People waiting to pay") and a unit ("people", "walk-ins", "%"). Otherwise kind "none".
+- alerts: false when the request only wants the number tracked and never asks to be told about something
+  ("count walk-ins", "track how many people are in line"); true otherwise.
 - clarifications: short questions if the request is ambiguous for this image (e.g. two blue bins are visible).
   Still give your best-guess spec.
-Use what you can see in the frame to make labels and locate phrases concrete."""
+Use what you can see in the frame to make labels and locate phrases concrete.
+
+"""+ POLICY_PROMPT + """
+- policy: allowed true, category "", reason "", suggestion "" for normal requests. When the request breaks the
+  policy: allowed false, a category (identity, protected_traits, bodies, private_spaces, covert, inference, minors,
+  unlawful), a one-sentence reason and a neutral rewording; still fill the other fields with a harmless spec."""
 
 COMPILE_SCHEMA = {
     "type": "object",
@@ -139,6 +153,28 @@ COMPILE_SCHEMA = {
         "severity": {"type": "string", "enum": ["info", "warning", "critical"]},
         "alert_message": {"type": "string"},
         "clarifications": {"type": "array", "items": {"type": "string"}},
+        "metric": {
+            "type": "object",
+            "properties": {
+                "kind": {"type": "string", "enum": ["none", "count", "crossings", "occupancy"]},
+                "name": {"type": "string"},
+                "unit": {"type": "string"},
+            },
+            "required": ["kind", "name", "unit"],
+            "additionalProperties": False,
+        },
+        "alerts": {"type": "boolean"},
+        "policy": {
+            "type": "object",
+            "properties": {
+                "allowed": {"type": "boolean"},
+                "category": {"type": "string"},
+                "reason": {"type": "string"},
+                "suggestion": {"type": "string"},
+            },
+            "required": ["allowed", "category", "reason", "suggestion"],
+            "additionalProperties": False,
+        },
         "actions": {
             "type": "array",
             "items": {
@@ -156,7 +192,7 @@ COMPILE_SCHEMA = {
     "required": [
         "name", "kind", "summary", "question", "positive_label", "negative_label", "targets", "target_question",
         "locate", "locate_noun", "crossing", "count_op", "count_value", "min_duration_s", "cooldown_s", "trigger",
-        "verify_with_vlm", "severity", "alert_message", "clarifications", "actions",
+        "verify_with_vlm", "severity", "alert_message", "clarifications", "actions", "metric", "alerts", "policy",
     ],
     "additionalProperties": False,
 }

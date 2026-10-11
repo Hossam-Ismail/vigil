@@ -43,16 +43,22 @@ export function ZoneShape({ zone, color, dashed }: { zone: Zone; color: string; 
 }
 
 export function BoxShape({ box, color, width = 2 }: { box: Box; color: string; width?: number }) {
+  // the Vigil target: a faint outline with solid corner brackets
   const [x1, y1, x2, y2] = box
+  const L = Math.min(x2 - x1, y2 - y1) * 0.28
+  const d = `M${x1},${y1 + L}V${y1}H${x1 + L}M${x2 - L},${y1}H${x2}V${y1 + L}M${x2},${y2 - L}V${y2}H${x2 - L}M${x1 + L},${y2}H${x1}V${y2 - L}`
   return (
-    <rect x={x1} y={y1} width={x2 - x1} height={y2 - y1} fill="none" stroke={color} strokeWidth={width} vectorEffect="non-scaling-stroke" rx={0.003} />
+    <g>
+      <rect x={x1} y={y1} width={x2 - x1} height={y2 - y1} fill="none" stroke={color} strokeOpacity={0.35} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+      <path d={d} fill="none" stroke={color} strokeWidth={width + 1} vectorEffect="non-scaling-stroke" strokeLinecap="square" />
+    </g>
   )
 }
 
 function Tag({ x, y, color, children }: { x: number; y: number; color: string; children: ReactNode }) {
   return (
     <div
-      className="absolute -translate-y-full whitespace-nowrap rounded-[5px] px-1.5 py-[1px] text-[10.5px] font-semibold text-black/90 shadow"
+      className="absolute -translate-y-full whitespace-nowrap px-1.5 py-[2px] font-mono text-[10.5px] font-medium uppercase tracking-[0.08em] text-black/90"
       style={{ left: `${x * 100}%`, top: `${y * 100}%`, background: color, maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis' }}
     >
       {children}
@@ -67,8 +73,8 @@ export function CameraView({ cameraId, aspect = 16 / 9, watches = [], focusWatch
   const focusRt = focusWatchId ? rtById.get(focusWatchId) : undefined
 
   return (
-    <div className={cx('relative w-full overflow-hidden bg-black', rounded && 'rounded-lg', className)} style={{ aspectRatio: String(aspect) }}>
-      <LiveImage cameraId={cameraId} fps={fps} className="absolute inset-0 h-full w-full" />
+    <div className={cx('scanlines relative w-full overflow-hidden bg-black', rounded && 'rounded-lg', className)} style={{ aspectRatio: String(aspect) }}>
+      <LiveImage cameraId={cameraId} fps={fps} className="feed-mono absolute inset-0 h-full w-full" />
       <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1 1" preserveAspectRatio="none">
         {shown.map((w) =>
           w.spec.zone ? <ZoneShape key={w.id} zone={w.spec.zone} color={tone(rtById.get(w.id))} dashed={w.status !== 'active'} /> : null,
@@ -80,10 +86,10 @@ export function CameraView({ cameraId, aspect = 16 / 9, watches = [], focusWatch
         )}
         {showDetections &&
           perception?.detections.map((d, i) => (
-            <BoxShape key={i} box={d.box} color={focusWatchId ? 'rgba(255,255,255,0.35)' : 'var(--info)'} width={focusWatchId ? 1 : 2} />
+            <BoxShape key={i} box={d.box} color={focusWatchId ? 'rgba(242,242,240,0.45)' : 'rgba(242,242,240,0.85)'} width={focusWatchId ? 1 : 1.5} />
           ))}
         {focusRt?.tracks.map((t) => (
-          <BoxShape key={t.id} box={t.box} color={(t.score ?? 0) >= focusRt.threshold ? 'var(--alert)' : 'var(--info)'} width={2.5} />
+          <BoxShape key={t.id} box={t.box} color={(t.score ?? 0) >= focusRt.threshold ? 'var(--alert)' : 'var(--accent)'} width={2.5} />
         ))}
       </svg>
       {showLabels && (
@@ -102,13 +108,13 @@ export function CameraView({ cameraId, aspect = 16 / 9, watches = [], focusWatch
             )
           })}
           {focusRt?.tracks.map((t) => (
-            <Tag key={t.id} x={t.box[0]} y={Math.max(0.03, t.box[1])} color={(t.score ?? 0) >= focusRt.threshold ? 'var(--alert)' : 'var(--info)'}>
+            <Tag key={t.id} x={t.box[0]} y={Math.max(0.03, t.box[1])} color={(t.score ?? 0) >= focusRt.threshold ? 'var(--alert)' : 'var(--accent)'}>
               {t.label} #{t.id} {t.score !== null && <span className="num">{Math.round(t.score * 100)}%</span>}
             </Tag>
           ))}
           {showDetections && !focusWatchId &&
             perception?.detections.slice(0, 12).map((d, i) => (
-              <Tag key={i} x={d.box[0]} y={Math.max(0.03, d.box[1])} color="var(--info)">
+              <Tag key={i} x={d.box[0]} y={Math.max(0.03, d.box[1])} color="rgba(242,242,240,0.85)">
                 {d.label} <span className="num">{Math.round(d.conf * 100)}</span>
               </Tag>
             ))}

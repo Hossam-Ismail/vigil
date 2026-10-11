@@ -149,6 +149,12 @@ class LocalBrain(Brain):
     def compile(self, request: str, frame: np.ndarray | None, camera_name: str) -> dict:
         template = {}
         for key, prop in COMPILE_SCHEMA["properties"].items():
+            if key == "policy":
+                template[key] = {"allowed": True, "category": "", "reason": "", "suggestion": ""}
+                continue
+            if key == "metric":
+                template[key] = {"kind": "none | count | crossings | occupancy", "name": "...", "unit": "..."}
+                continue
             if key == "actions":
                 template[key] = [{"type": "imessage | hubspot | webhook | slack | ntfy",
                                   "object": "ticket | task | note | (empty)", "note": "..."}]

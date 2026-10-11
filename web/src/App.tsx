@@ -5,6 +5,7 @@ import { startLive } from './lib/live'
 import { CameraDetail } from './pages/CameraDetail'
 import { Cameras } from './pages/Cameras'
 import { Events } from './pages/Events'
+import { Metrics } from './pages/Metrics'
 import { Live } from './pages/Live'
 import { NewWatch } from './pages/NewWatch'
 import { PushCamera } from './pages/PushCamera'
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="new" element={<NewWatch />} />
           <Route path="watches" element={<Watches />} />
           <Route path="watches/:id" element={<WatchDetail />} />
+          <Route path="metrics" element={<Metrics />} />
           <Route path="events" element={<Events />} />
           <Route path="cameras" element={<Cameras />} />
           <Route path="cameras/:id" element={<CameraDetail />} />

@@ -72,6 +72,15 @@ CREATE TABLE IF NOT EXISTS outbox (
     answered INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS outbox_handle ON outbox(handle, ts DESC);
+CREATE TABLE IF NOT EXISTS metrics (
+    watch_id INTEGER NOT NULL REFERENCES watches(id) ON DELETE CASCADE,
+    ts REAL NOT NULL,
+    sum REAL NOT NULL,
+    n INTEGER NOT NULL,
+    max REAL NOT NULL,
+    last REAL NOT NULL,
+    PRIMARY KEY (watch_id, ts)
+);
 CREATE TABLE IF NOT EXISTS kv (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
@@ -290,6 +299,24 @@ class DB:
         return self.event(eid)
 
     # ---- key/value settings --------------------------------------------
+    # ---- metrics (one row per watch per minute) ---------------------------
+    def add_metric_rows(self, rows: list[dict]) -> None:
+        with self._lock:
+            self._conn.executemany(
+                "INSERT INTO metrics (watch_id, ts, sum, n, max, last) VALUES (:watch_id, :ts, :sum, :n, :max, :last) "
+                "ON CONFLICT(watch_id, ts) DO UPDATE SET sum = sum + excluded.sum, n = n + excluded.n, "
+                "max = MAX(max, excluded.max), last = excluded.last",
+                rows,
+            )
+
+    def metric_buckets(self, watch_id: int, since: float, bucket_s: float) -> list[dict]:
+        """Minute rows rolled up into `bucket_s` buckets: sum, checks, peak, last."""
+        return self.all(
+            "SELECT CAST(ts / ? AS INTEGER) * ? AS ts, SUM(sum) AS sum, SUM(n) AS n, MAX(max) AS max, "
+            "MAX(ts) AS last_ts FROM metrics WHERE watch_id = ? AND ts >= ? GROUP BY 1 ORDER BY 1",
+            (bucket_s, bucket_s, watch_id, since),
+        )
+
     def get_kv(self, key: str, default: Any = None) -> Any:
         row = self.one("SELECT value FROM kv WHERE key=?", (key,))
         return json.loads(row["value"]) if row else default

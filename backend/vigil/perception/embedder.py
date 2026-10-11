@@ -96,5 +96,6 @@ def get_embedder() -> Embedder:
     with _init_lock:
         if _embedder is None:
             log.info("loading embedder %s on %s", settings.embed_model, settings.device)
-            _embedder = Embedder()
+            with gpu_lock:
+                _embedder = Embedder()
         return _embedder

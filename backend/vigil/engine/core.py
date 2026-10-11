@@ -121,7 +121,7 @@ class CameraAnalyzer:
                 trig = rt.step_state(ts, e)
                 rt.last_crop, rt.last_crop_emb = c, e
                 self.engine.learner.offer(rt.id, c, e, rt.score or 0.0, rt.head.threshold)
-                if trig:
+                if trig and rt.spec.alerts:
                     self.engine.events.create(trig, frame)
             else:
                 p = float(rt.head.proba(e)[0])
@@ -135,8 +135,11 @@ class CameraAnalyzer:
                 # far-away detections are not scored this tick (None): their tracks keep the last score
                 probs = [scored.get(i) for i in range(len(mine))]
             trig = rt.step_objects(ts, mine, probs)
-            if trig:
+            if trig and rt.spec.alerts:
                 self.engine.events.create(trig, frame)
+        rows = [r for rt in runtimes for r in rt.pop_metric_rows()]
+        if rows:
+            self.engine.db.add_metric_rows(rows)
 
         self.tick_ms = (time.perf_counter() - t0) * 1000
         self.last = {

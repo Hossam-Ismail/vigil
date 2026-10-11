@@ -165,7 +165,8 @@ def get_coco() -> CocoDetector:
     with _init_lock:
         if _coco is None:
             log.info("loading RF-DETR (%s)", settings.coco_model)
-            _coco = CocoDetector()
+            with gpu_lock:  # loading onto the GPU (and importing torch-side modules) must not overlap other model work
+                _coco = CocoDetector()
         return _coco
 
 
@@ -174,5 +175,6 @@ def get_owl() -> OpenVocabDetector:
     with _init_lock:
         if _owl is None:
             log.info("loading OWLv2 %s", settings.open_vocab_model)
-            _owl = OpenVocabDetector()
+            with gpu_lock:
+                _owl = OpenVocabDetector()
         return _owl

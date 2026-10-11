@@ -95,6 +95,9 @@ class AlertMachine:
         return False
 
 
+METRIC_BUCKET_S = 60.0
+
+
 class WatchRuntime:
     def __init__(self, watch: dict, head: Head):
         self.id: int = watch["id"]
@@ -118,6 +121,8 @@ class WatchRuntime:
         self.tracks: list[Track] = []
         self.crossings: deque[float] = deque(maxlen=500)
         self.pending_dets: list[Detection] = []
+        self.metric_rows: list[dict] = []  # finished one-minute metric buckets, flushed to the DB by the engine
+        self._bucket: dict | None = None
         self.last_crop: np.ndarray | None = None
         self.last_crop_emb: np.ndarray | None = None
 
@@ -151,12 +156,43 @@ class WatchRuntime:
         thr = self.head.threshold
         cond = self.vote.update(p >= thr, p < max(0.05, thr - 0.12))
         self.cond = cond
+        self._record(ts, cond=cond)
         if self.machine.step(ts, cond):
             return Trigger(
                 self.id, self.camera_id, ts, p, self.spec.alert_message or self.spec.positive_label,
                 crop_box=self.spec.zone.bbox() if self.spec.zone else None,
             )
         return None
+
+    # ---- metrics -------------------------------------------------------
+    def _record(self, ts: float, *, count: float = 0.0, crossed: float = 0.0, cond: bool = False) -> None:
+        """Add one check to the watch's metric, rolled up into one-minute buckets (sum, checks, peak, last).
+
+        count: objects in the zone now (gauge) · crossings: objects that crossed this check (counter) ·
+        occupancy: 1 while the debounced answer is YES, else 0 (the bucket average is the share of time).
+        """
+        m = self.spec.metric
+        if m is None:
+            return
+        value = {"count": count, "crossings": crossed, "occupancy": 1.0 if cond else 0.0}[m.kind]
+        start = ts - ts % METRIC_BUCKET_S
+        b = self._bucket
+        if b is not None and b["ts"] != start:
+            self.metric_rows.append(b)
+            b = None
+        if b is None:
+            b = self._bucket = {"watch_id": self.id, "ts": start, "sum": 0.0, "n": 0, "max": 0.0, "last": 0.0}
+        b["sum"] += value
+        b["n"] += 1
+        b["max"] = max(b["max"], value)
+        b["last"] = value
+
+    def pop_metric_rows(self) -> list[dict]:
+        rows, self.metric_rows = self.metric_rows, []
+        return rows
+
+    def live_bucket(self) -> dict | None:
+        return dict(self._bucket) if self._bucket else None
 
     # ---- presence / count watches ---------------------------------------
     @property
@@ -205,6 +241,7 @@ class WatchRuntime:
         cond_now = op(count, self.spec.count_value)
         cond = self.vote.update(cond_now, not cond_now)
         self.cond = cond
+        self._record(ts, count=float(count), cond=cond)
         boxes = [(t.box, f"{t.label} #{t.id}") for t in qualifying]
 
         if self.spec.trigger == "per_object" and self.spec.kind == "presence":
@@ -259,6 +296,7 @@ class WatchRuntime:
         self.score = max((t.score or 0 for t in crossed), default=0.0)
         self.cond = bool(crossed)
         self.history.append((ts, float(recent)))
+        self._record(ts, crossed=float(len(crossed)), cond=bool(crossed))
         if crossed and ts - self.last_object_alert >= self.spec.cooldown_s:
             self.last_object_alert = ts
             best = max(crossed, key=lambda t: t.score or 0)

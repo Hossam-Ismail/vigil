@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Page } from '../components/Layout'
 import { Button, Card, cx, Empty, Field, inputCls, Toggle } from '../components/ui'
-import { api, type Camera, type CameraKind } from '../lib/api'
+import { type Webcam, api, type Camera, type CameraKind } from '../lib/api'
 import { useFetch } from '../lib/hooks'
 import { useLive } from '../lib/live'
 import { LiveImage } from '../components/LiveImage'
@@ -17,7 +17,7 @@ const KINDS: { kind: CameraKind; label: string; icon: typeof Wifi; hint: string 
   { kind: 'browser', label: 'Phone or laptop', icon: Smartphone, hint: 'Stream this device’s camera from a browser tab' },
   { kind: 'http', label: 'Stream URL', icon: Globe, hint: 'HTTP MJPEG, HLS (.m3u8) or any FFmpeg-readable URL' },
   { kind: 'file', label: 'Video file', icon: Film, hint: 'A file path on this machine; loops in real time' },
-  { kind: 'webcam', label: 'USB webcam', icon: Laptop, hint: 'Device index on the machine running Vigil' },
+  { kind: 'webcam', label: 'USB webcam', icon: Laptop, hint: 'Built-in or USB camera, picked by name' },
   { kind: 'demo', label: 'Demo scene', icon: CameraIcon, hint: 'A simulated parts shelf you can empty and restock' },
 ]
 
@@ -29,6 +29,15 @@ function AddCamera({ onDone, onCancel }: { onDone: (c: Camera) => void; onCancel
   const [err, setErr] = useState<string | null>(null)
   const [scan, setScan] = useState<{ devices: Device[]; templates: Template[] } | null>(null)
   const [scanning, setScanning] = useState(false)
+  const [webcams, setWebcams] = useState<Webcam[] | null>(null)
+
+  useEffect(() => {
+    if (kind !== 'webcam') return
+    api.get<Webcam[]>('/api/webcams').then((list) => {
+      setWebcams(list)
+      setUrl((u) => (u && list.some((c) => c.name === u) ? u : list.find((c) => c.default)?.name ?? ''))
+    }).catch(() => setWebcams([]))
+  }, [kind])
 
   useEffect(() => {
     api.get<{ devices: Device[]; templates: Template[] }>('/api/discover?timeout=0.1').then(setScan).catch(() => {})
@@ -47,8 +56,9 @@ function AddCamera({ onDone, onCancel }: { onDone: (c: Camera) => void; onCancel
     setBusy(true)
     setErr(null)
     try {
-      const u = kind === 'demo' ? 'shelf' : kind === 'webcam' ? url || '0' : url
-      const c = await api.post<Camera>('/api/cameras', { name: name || KINDS.find((k) => k.kind === kind)!.label, kind, url: u })
+      const u = kind === 'demo' ? 'shelf' : url
+      const fallback = kind === 'webcam' && url ? url : KINDS.find((k) => k.kind === kind)!.label
+      const c = await api.post<Camera>('/api/cameras', { name: name || fallback, kind, url: u })
       onDone(c)
     } catch (e) {
       setErr((e as Error).message)
@@ -76,16 +86,35 @@ function AddCamera({ onDone, onCancel }: { onDone: (c: Camera) => void; onCancel
         <Field label="Name">
           <input className={inputCls} value={name} placeholder="Front door, Aisle 3, Loading dock…" onChange={(e) => setName(e.target.value)} />
         </Field>
-        {(kind === 'rtsp' || kind === 'http' || kind === 'file' || kind === 'webcam') && (
+        {kind === 'webcam' && (
+          <Field label="Camera" hint="Cameras on this computer, by name. An iPhone nearby can show up here through Continuity Camera; it is only used if you pick it.">
+            {webcams === null ? (
+              <div className="text-[12.5px] text-muted">Looking for cameras…</div>
+            ) : webcams.length ? (
+              <div className="flex flex-col gap-1.5">
+                {webcams.map((c) => (
+                  <label key={c.name} className={cx('flex cursor-pointer items-center gap-2.5 border px-3 py-2 text-[13px]', url === c.name ? 'border-accent bg-accent-soft' : 'border-line bg-panel-2 hover:border-line-2')}>
+                    <input type="radio" name="webcam" className="accent-[var(--accent)]" checked={url === c.name} onChange={() => setUrl(c.name)} />
+                    <span className="font-medium">{c.name}</span>
+                    <span className="hud ml-auto text-muted">{c.kind === 'builtin' ? 'built-in' : c.kind === 'phone' ? 'iPhone · Continuity' : 'USB'}</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <div className="text-[12.5px] text-warn">No camera found. Check that the camera is connected and that this app has camera access in System Settings → Privacy & Security → Camera.</div>
+            )}
+          </Field>
+        )}
+        {(kind === 'rtsp' || kind === 'http' || kind === 'file') && (
           <Field
-            label={kind === 'file' ? 'File path' : kind === 'webcam' ? 'Device index' : 'Stream URL'}
+            label={kind === 'file' ? 'File path' : 'Stream URL'}
             hint={kind === 'rtsp' ? 'Use the sub-stream for analysis; credentials stay on this machine.' : undefined}
           >
             <input
               className={cx(inputCls, 'num text-[12.5px]')}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder={kind === 'rtsp' ? 'rtsp://user:pass@192.168.1.20:554/h264Preview_01_sub' : kind === 'http' ? 'https://…/stream.m3u8' : kind === 'file' ? '/Users/me/Videos/dock.mp4' : '0'}
+              placeholder={kind === 'rtsp' ? 'rtsp://user:pass@192.168.1.20:554/h264Preview_01_sub' : kind === 'http' ? 'https://…/stream.m3u8' : '/Users/me/Videos/dock.mp4'}
             />
           </Field>
         )}
@@ -144,6 +173,7 @@ function CameraRow({ c, onChange }: { c: Camera; onChange: () => void }) {
           <CameraStatusDot cam={c} />
           <Link to={`/cameras/${c.id}`} className="truncate font-medium hover:underline">{c.name}</Link>
           <span className="rounded bg-panel-3 px-1.5 text-[10.5px] uppercase text-muted">{c.kind}</span>
+          {c.kind === 'webcam' && <span className="truncate text-[12px] text-muted">{c.url && !/^\d*$/.test(c.url) ? c.url : 'built-in camera'}</span>}
         </div>
         <div className="num truncate text-[12px] text-muted">
           {status}{c.width ? ` · ${c.width}×${c.height}` : ''}{c.fps ? ` · ${c.fps} fps` : ''} · {c.history_frames} frames of history · {c.watch_count} watch{c.watch_count === 1 ? '' : 'es'}

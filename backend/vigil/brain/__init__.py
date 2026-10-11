@@ -16,6 +16,7 @@ log = logging.getLogger("vigil.brain")
 _brains: dict[str, Brain] = {}
 _lock = threading.Lock()
 _preference = settings.brain
+_private = True  # private mode: never send images to a cloud model (see privacy.py)
 
 
 def _instance(name: str) -> Brain:
@@ -39,21 +40,32 @@ def set_preference(name: str) -> None:
     _preference = name
 
 
+def set_private(on: bool) -> None:
+    global _private
+    _private = bool(on)
+
+
+def private() -> bool:
+    return _private
+
+
 def preference() -> str:
     return _preference
 
 
 def get_brain() -> Brain:
-    if _preference != "auto":
+    cloud_ok = not _private
+    if _preference != "auto" and (cloud_ok or _preference != "anthropic"):
         b = _instance(_preference)
         if b.available():
             return b
         log.warning("brain %s unavailable, falling back", _preference)
-    for name in ("anthropic", "local", "heuristic"):
+    for name in ("anthropic", "local", "heuristic") if cloud_ok else ("local", "heuristic"):
         b = _instance(name)
         if b.available():
             return b
     return _instance("heuristic")
 
 
-__all__ = ["Brain", "BrainError", "Judgement", "LabelTask", "get_brain", "options", "set_preference", "preference"]
+__all__ = ["Brain", "BrainError", "Judgement", "LabelTask", "get_brain", "options", "set_preference", "preference",
+           "set_private", "private"]

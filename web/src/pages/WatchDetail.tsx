@@ -9,12 +9,13 @@ import { Sparkline } from '../components/Sparkline'
 import { Button, Card, cx, Empty, KindBadge, SectionTitle, StatusPill } from '../components/ui'
 import { liveRuntime, runtimeTone } from '../components/WatchChip'
 import { ZoneEditor } from '../components/ZoneEditor'
-import { api, type Camera, type Sample, type VEvent, type Watch, type WatchSpec } from '../lib/api'
+import { api, type Camera, type MetricOut, type Sample, type VEvent, type Watch, type WatchSpec } from '../lib/api'
 import { dateTime, duration, ORIGIN_LABEL, SOURCE_LABEL, timeAgo } from '../lib/format'
 import { useFetch, useInterval } from '../lib/hooks'
 import { useLive } from '../lib/live'
 import { ModelSummary } from './NewWatch'
 import { PlanEditor } from '../components/PlanEditor'
+import { MetricCard } from './Metrics'
 
 type Filter = 'all' | 'yes' | 'no' | 'review'
 
@@ -118,6 +119,12 @@ function TeachBar({ w, onDone }: { w: Watch; onDone: () => void }) {
       </Button>
     </Card>
   )
+}
+
+function WatchMetric({ id }: { id: number }) {
+  const m = useFetch<MetricOut>(`/api/watches/${id}/metrics?hours=24&bucket=1800`, [id])
+  useInterval(() => m.reload(), 15000)
+  return m.data ? <div className="mb-5"><MetricCard m={m.data} hours={24} bucket={1800} /></div> : null
 }
 
 export function WatchDetail() {
@@ -234,6 +241,8 @@ export function WatchDetail() {
         {w.status === 'building' && <div className="mt-2 text-[12.5px] text-info">{build?.message ?? w.status_detail}</div>}
         {w.status !== 'building' && w.status_detail && w.status_detail !== 'ready' && <div className="mt-2 text-[12.5px] text-warn">{w.status_detail}</div>}
       </Card>
+
+      {w.spec.metric && <WatchMetric id={w.id} />}
 
       {editing && draft && (
         <Card className="mb-5 p-5 slide-in">

@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import logging
+import platform
 import queue
+import subprocess
+import shutil
 import threading
 import time
 from collections.abc import Iterator
 
+import av
 import cv2
 import numpy as np
 
@@ -100,23 +104,65 @@ class AVSource(FrameSource):
 
 
 class WebcamSource(FrameSource):
-    """Local USB/built-in camera. `url` is the device index (\"0\")."""
+    """A camera on this machine, chosen by NAME ("FaceTime HD Camera"); see webcams.py for why.
+
+    Opens the named device through FFmpeg's AVFoundation input on macOS, so a nearby iPhone (Continuity
+    Camera) can never be picked by accident; falls back to OpenCV at the device's current index.
+    """
 
     def __init__(self, url: str):
-        self.index = int(url or 0)
+        self.url = url
 
     def frames(self, stop: threading.Event) -> Iterator[np.ndarray]:
-        cap = cv2.VideoCapture(self.index)
+        from .webcams import resolve
+
+        cam = resolve(self.url)
+        if cam is None:
+            raise RuntimeError(f"no camera named {self.url!r} on this machine" if self.url and not self.url.isdigit()
+                               else "no camera found on this machine")
+        if platform.system() == "Darwin" and shutil.which("ffmpeg"):
+            got = False
+            for frame in self._ffmpeg(cam.name, stop):
+                got = True
+                yield frame
+            if got or stop.is_set():
+                return
+            log.warning("FFmpeg could not open %r; trying OpenCV index %d", cam.name, cam.index)
+        cap = cv2.VideoCapture(cam.index)
         if not cap.isOpened():
-            raise RuntimeError(f"cannot open webcam {self.index} (camera permission?)")
+            raise RuntimeError(f"cannot open {cam.name} (camera permission?)")
         try:
             while not stop.is_set():
                 ok, frame = cap.read()
                 if not ok:
-                    raise RuntimeError("webcam read failed")
+                    raise RuntimeError(f"{cam.name}: read failed")
                 yield _fit(frame)
         finally:
             cap.release()
+
+    @staticmethod
+    def _ffmpeg(name: str, stop: threading.Event, w: int = 1280, h: int = 720) -> Iterator[np.ndarray]:
+        """The named AVFoundation camera through an FFmpeg child process (exact device, no in-process AVFoundation)."""
+        vf = f"scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2"
+        for size in (["-video_size", "1280x720"], []):
+            proc = subprocess.Popen(
+                ["ffmpeg", "-hide_banner", "-loglevel", "error", "-f", "avfoundation", "-framerate", "30", *size,
+                 "-i", f"{name}:none", "-vf", vf, "-r", "15", "-f", "rawvideo", "-pix_fmt", "bgr24", "-"],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+            n = w * h * 3
+            got = False
+            try:
+                while not stop.is_set():
+                    buf = proc.stdout.read(n) if proc.stdout else b""
+                    if len(buf) < n:
+                        break
+                    got = True
+                    yield np.frombuffer(buf, np.uint8).reshape(h, w, 3).copy()
+            finally:
+                proc.kill()
+                proc.wait(timeout=5)
+            if got:
+                return
 
 
 class PushSource(FrameSource):

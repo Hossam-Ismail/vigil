@@ -6,6 +6,8 @@ import { cx } from './ui'
 
 const EXAMPLES = [
   'Text me when a package is left on the front step',
+  'Count walk-ins at the front door',
+  'How many people are waiting in line?',
   'Text me if the garage door has been open for 15 minutes',
   'When the staging area for Line 1 is empty for 2 minutes, add a restock task in HubSpot',
   'Text the shift lead if anyone at the pump isn’t wearing a hard hat',

@@ -31,6 +31,35 @@ export type WatchSpec = {
   check_interval_s: number
   clarifications: string[]
   actions: Action[]
+  metric: Metric | null
+  alerts: boolean
+}
+
+export type MetricKind = 'count' | 'crossings' | 'occupancy'
+export type Metric = { kind: MetricKind; name: string; unit: string }
+export type MetricPoint = { ts: number; value: number; peak: number }
+export type MetricSummary = {
+  checks: number
+  now?: number | boolean | null
+  avg?: number | null
+  peak?: number | null
+  total?: number
+  last_hour?: number
+  per_hour?: number
+  pct?: number | null
+}
+export type MetricOut = {
+  watch_id: number
+  name: string
+  status: string
+  camera_id: number
+  camera_name: string
+  alerts: boolean
+  metric: Metric
+  hours: number
+  bucket_s: number
+  summary: MetricSummary
+  series: MetricPoint[]
 }
 
 export type ActionType = 'imessage' | 'hubspot' | 'webhook' | 'slack' | 'ntfy'
@@ -46,9 +75,33 @@ export type Integrations = {
 }
 
 export type IntegrationsStatus = {
-  imessage: { url: string; ok: boolean; dry_run?: boolean; watching?: boolean; last_error?: string; error?: string; default_to: string }
+  imessage: {
+    url: string
+    ok: boolean
+    mode?: 'live' | 'test'
+    dry_run?: boolean
+    can_send?: boolean
+    reads_replies?: boolean
+    watching?: boolean
+    messages_found?: boolean
+    host_app?: string
+    needs?: ('full_disk_access' | 'automation')[]
+    sent_ok?: number
+    replied?: number
+    agent?: boolean
+    last_error?: string
+    last_send_error?: string
+    error?: string
+    managed?: boolean
+    setup_problem?: string
+    default_to: string
+  }
   hubspot: { configured: boolean }
 }
+
+export type Privacy = { private_mode: boolean; blur_faces: boolean; keep_history_days: number; keep_events_days: number }
+
+export type Webcam = { index: number; name: string; kind: 'builtin' | 'phone' | 'external'; default: boolean }
 
 export type Track = { id: number; label: string; box: Box; score: number | null; confirmed: boolean }
 
@@ -201,6 +254,8 @@ export type Settings = {
   brains: BrainOption[]
   public_url: string
   active_learning_per_hour: number
+  privacy: Privacy
+  policy_refusals: Record<string, number>
 }
 
 export type BuildMsg = {
@@ -213,11 +268,15 @@ export type BuildMsg = {
   metrics?: Metrics
 }
 
+export type PolicyRefusal = { code: 'policy'; allowed: false; category: string; reason: string; suggestion: string }
+
 export class ApiError extends Error {
   status: number
-  constructor(status: number, message: string) {
+  policy?: PolicyRefusal
+  constructor(status: number, message: string, policy?: PolicyRefusal) {
     super(message)
     this.status = status
+    this.policy = policy
   }
 }
 
@@ -229,13 +288,19 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   })
   if (!res.ok) {
     let msg = res.statusText
+    let policy: PolicyRefusal | undefined
     try {
       const data = await res.json()
-      msg = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)
+      if (data.detail && data.detail.code === 'policy') {
+        policy = data.detail as PolicyRefusal
+        msg = policy.reason
+      } else {
+        msg = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)
+      }
     } catch {
       /* not json */
     }
-    throw new ApiError(res.status, msg)
+    throw new ApiError(res.status, msg, policy)
   }
   return res.json() as Promise<T>
 }

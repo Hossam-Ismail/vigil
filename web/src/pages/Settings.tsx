@@ -1,9 +1,9 @@
-import { BellRing, Brain, Cpu, MessageCircle, Plus, Send, Ticket, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { BellRing, Brain, Cpu, EyeOff, Lock, MessageCircle, Plus, Send, ShieldCheck, Ticket, Trash2 } from 'lucide-react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { Page } from '../components/Layout'
 import { Button, Card, cx, Field, inputCls, SectionTitle, Toggle } from '../components/ui'
-import { api, type ActionResult, type Channel, type Health, type IntegrationsStatus, type Settings as SettingsT } from '../lib/api'
-import { useFetch } from '../lib/hooks'
+import { api, type ActionResult, type Channel, type Health, type IntegrationsStatus, type Privacy, type Settings as SettingsT } from '../lib/api'
+import { useFetch, useInterval } from '../lib/hooks'
 
 const BRAIN_INFO: Record<string, { title: string; body: string }> = {
   auto: { title: 'Automatic', body: 'Use Claude when an API key is set, otherwise the local model, otherwise the built-in fallback.' },
@@ -103,6 +103,8 @@ export function Settings() {
       </div>
       {health.data && <div className="mt-2 text-[12.5px] text-muted">In use now: <span className="text-ink">{health.data.brain.label}</span></div>}
 
+      <PrivacyPanel settings={s.data} onSaved={s.setData} />
+
       <Integrations settings={s.data} onSaved={s.setData} />
 
       <div className="mt-10">
@@ -176,6 +178,91 @@ export function Settings() {
   )
 }
 
+const NEVER = [
+  'Identify or recognize people, or follow a particular person',
+  'Single out people by gender, race, religion, age or appearance',
+  'Look at bodies, or watch bathrooms, changing rooms or other homes',
+  'Guess emotions, intentions or health, or watch covertly',
+]
+
+function PrivacyPanel({ settings, onSaved }: { settings: SettingsT | null | undefined; onSaved: (s: SettingsT) => void }) {
+  const p = settings?.privacy
+  const refused = Object.values(settings?.policy_refusals ?? {}).reduce((a, b) => a + b, 0)
+  const save = async (patch: Partial<Privacy>) => onSaved(await api.put<SettingsT>('/api/settings', { privacy: patch }))
+  if (!p) return null
+  return (
+    <div className="mt-10">
+      <SectionTitle>Privacy &amp; safety</SectionTitle>
+      <div className="grid gap-2 lg:grid-cols-2">
+        <Card className="flex flex-col gap-4 p-4">
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 text-[13.5px] font-semibold"><Lock className="size-4 text-accent" /> Private mode</div>
+              <div className="mt-0.5 text-[12px] leading-snug text-muted">
+                {p.private_mode
+                  ? 'On: video and images never leave this computer. Watches are built and double-checked by the local model.'
+                  : 'Off: the Claude brain may see the few frames it labels or double-checks (never the live stream). Nothing is stored by Vigil anywhere else.'}
+              </div>
+            </div>
+            <Toggle checked={p.private_mode} onChange={(v) => save({ private_mode: v })} label="Private mode" />
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 text-[13.5px] font-semibold"><EyeOff className="size-4 text-accent" /> Blur faces</div>
+              <div className="mt-0.5 text-[12px] leading-snug text-muted">Heads are pixelated in alert snapshots and clips, which are what gets texted or shown.</div>
+            </div>
+            <Toggle checked={p.blur_faces} onChange={(v) => save({ blur_faces: v })} label="Blur faces" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Keep background frames">
+              <select className={inputCls} value={p.keep_history_days} onChange={(e) => save({ keep_history_days: Number(e.target.value) })}>
+                {[1, 3, 7, 14, 30].map((d) => <option key={d} value={d}>{d} day{d > 1 ? 's' : ''}</option>)}
+              </select>
+            </Field>
+            <Field label="Keep alerts and clips">
+              <select className={inputCls} value={p.keep_events_days} onChange={(e) => save({ keep_events_days: Number(e.target.value) })}>
+                {[7, 30, 90, 365].map((d) => <option key={d} value={d}>{d} days</option>)}
+              </select>
+            </Field>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-[13.5px] font-semibold"><ShieldCheck className="size-4 text-accent" /> What Vigil won't watch for</div>
+          <div className="mt-0.5 text-[12px] leading-snug text-muted">Vigil watches objects, events and conditions, never kinds of people. Requests like these are refused before any model is built:</div>
+          <ul className="mt-2 flex flex-col gap-1.5 text-[12.5px]">
+            {NEVER.map((x) => <li key={x} className="flex gap-2"><span className="text-alert">✕</span>{x}</li>)}
+          </ul>
+          <div className="mt-3 text-[12px] text-muted">
+            Video stays on this machine · camera passwords stay here · the app only listens on this computer (127.0.0.1)
+            {refused > 0 && <> · <span className="num">{refused}</span> request{refused === 1 ? '' : 's'} refused so far</>}
+          </div>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+function Step({ n, title, done, optional, children }: { n: number; title: string; done: boolean; optional?: boolean; children?: ReactNode }) {
+  return (
+    <li className="flex gap-3">
+      <span className={cx('num mt-[1px] grid size-5 shrink-0 place-items-center text-[11px]', done ? 'bg-accent text-accent-ink' : 'border border-line-2 text-muted')}>{done ? '✓' : n}</span>
+      <div className="min-w-0 flex-1">
+        <div className="font-medium">{title}{optional && <span className="ml-1.5 font-normal text-muted">(optional)</span>}</div>
+        <div className="text-muted">{children}</div>
+      </div>
+    </li>
+  )
+}
+
+function PermissionHint({ pane, children }: { pane: 'full_disk_access' | 'automation' | 'camera'; children: ReactNode }) {
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+      <span>{children}</span>
+      <Button size="sm" onClick={() => api.post('/api/system/open-settings', { pane })}>Open System Settings</Button>
+    </div>
+  )
+}
+
 function Integrations({ settings, onSaved }: { settings: SettingsT | null | undefined; onSaved: (s: SettingsT) => void }) {
   const status = useFetch<IntegrationsStatus>('/api/integrations/status')
   const [to, setTo] = useState('')
@@ -210,28 +297,70 @@ function Integrations({ settings, onSaved }: { settings: SettingsT | null | unde
     }
   }
 
+  useInterval(() => status.reload(), 5000)
   const im = status.data?.imessage
   const integ = settings?.integrations
+  const imReady = !!(im?.ok && im.can_send && integ?.imessage_to)
+  const imState = !im ? 'checking' : !im.ok ? 'starting' : im.dry_run ? 'test mode' : imReady ? (im.reads_replies ? 'agent live' : 'alerts only') : "set up"
   return (
     <div className="mt-10">
       <SectionTitle>Integrations</SectionTitle>
       <div className="mb-2 text-[13px] text-muted">Each watch can do more than notify: text you, open a CRM ticket, call your systems. Set the accounts up once here, then pick them under “Then” on any watch.</div>
       <div className="grid gap-2 lg:grid-cols-2">
         <Card className="p-4">
-          <div className="flex items-center gap-2 text-[13.5px] font-semibold"><MessageCircle className="size-4 text-accent" /> iMessage <span className="font-normal text-muted">via Photon</span></div>
-          <div className="mt-1 text-[12px] leading-snug text-muted">Alerts arrive as a text with the snapshot. Reply YES or NO and the watch retrains on your answer.</div>
-          <div className="mt-3 flex flex-col gap-2">
-            <Field label="Send alerts to"><input className={inputCls} placeholder="+1 415 555 0100 or you@icloud.com" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
-            <Field label="Bridge" hint="Run imessage-bridge on a Mac signed in to Messages"><input className={inputCls} placeholder="http://127.0.0.1:8790" value={bridge} onChange={(e) => setBridge(e.target.value)} /></Field>
+          <div className="flex items-center gap-2 text-[13.5px] font-semibold">
+            <MessageCircle className="size-4 text-accent" /> iMessage agent <span className="font-normal text-muted">built on Photon Spectrum</span>
+            <span className={cx('hud ml-auto', imReady ? 'text-accent' : 'text-warn')}>{imState}</span>
           </div>
-          <div className={cx('mt-2 text-[12px]', im?.ok ? 'text-ok' : 'text-warn')}>
-            {!im ? 'Checking bridge…' : im.ok ? `Bridge connected${im.dry_run ? ' (dry run: logs instead of sending)' : ''}${im.watching ? ' · listening for replies' : ''}` : 'Bridge not running: cd imessage-bridge && npm start'}
+          <div className="mt-1 text-[12px] leading-snug text-muted">Vigil lives in your iMessage. It texts you alerts with the photo, and you can text it back: set up a new watch, ask for a live photo or a count, pause a watch, or tell it an alert was wrong. Runs through this Mac's Messages app with Photon's open-source Spectrum SDK. Nothing to install on the phone.</div>
+          <ol className="mt-3 flex flex-col gap-2.5 text-[12.5px]">
+            <Step done={!!im?.ok} n={1} title="Vigil's iMessage helper is running">
+              {im?.setup_problem || (!im ? 'Checking…' : im.ok ? (im.managed ? 'Started automatically by Vigil.' : 'Running.') : 'Starting it… this takes a few seconds.')}
+            </Step>
+            <Step done={!!im?.messages_found} n={2} title="This Mac is signed in to Messages">
+              {im?.messages_found ? 'Messages is set up.' : 'Open the Messages app and sign in with your Apple ID.'}
+            </Step>
+            <Step done={!!integ?.imessage_to} n={3} title="Your number: alerts go here, and only it can talk to Vigil">
+              <div className="mt-1.5 flex gap-2">
+                <input className={inputCls} placeholder="+1 415 555 0100 or you@icloud.com" value={to} onChange={(e) => setTo(e.target.value)} />
+                <Button size="sm" variant="primary" loading={saving} onClick={() => save({ imessage_to: to })}>Save</Button>
+              </div>
+            </Step>
+            <Step done={!!im?.sent_ok} n={4} title="Send yourself a test text">
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                <Button size="sm" icon={<Send className="size-3.5" />} disabled={!im?.ok || !integ?.imessage_to || !!im?.dry_run} onClick={() => test('imessage')}>Send test text</Button>
+                <span>The first time, macOS asks to let {im?.host_app ?? 'Vigil'} control Messages: click OK.</span>
+              </div>
+              {im?.needs?.includes('automation') && (
+                <PermissionHint pane="automation">macOS blocked sending. Open Automation and turn on <b>Messages</b> under {im.host_app}.</PermissionHint>
+              )}
+              {result.imessage && <div className="mt-1.5">{result.imessage}</div>}
+            </Step>
+            <Step done={!!im?.reads_replies} n={5} title="Turn on the conversation">
+              {im?.reads_replies ? 'Spectrum is connected: Vigil reads your texts and answers them.' : (
+                <PermissionHint pane="full_disk_access">
+                  So Vigil can read what you text it, give <b>{im?.host_app ?? 'the app that runs Vigil'}</b> Full Disk Access (Messages keeps incoming texts in a protected folder that Spectrum reads). Vigil notices within 30 seconds, no restart.
+                </PermissionHint>
+              )}
+            </Step>
+          </ol>
+          <div className="mt-3 rounded-lg border border-line bg-panel-2 p-3 text-[12px]">
+            <div className="hud mb-1.5 text-muted">Then text Vigil</div>
+            <div className="flex flex-wrap gap-1.5">
+              {['Text me when a package is left at the door', "What's happening at the dock?", 'How many cars are in the lot?', 'What are you watching?', 'Pause dock', 'YES / NO after an alert'].map((t) => (
+                <span key={t} className="rounded-full border border-line-2 px-2 py-0.5 text-ink-2">{t}</span>
+              ))}
+            </div>
+            <div className="mt-1.5 text-muted">Same safety rules as the app: requests to watch people by who they are are refused. {im?.replied ? `${im.replied} answered so far.` : ''}</div>
           </div>
-          <div className="mt-3 flex gap-2">
-            <Button size="sm" variant="primary" loading={saving} onClick={() => save({ imessage_to: to, imessage_bridge: bridge })}>Save</Button>
-            <Button size="sm" icon={<Send className="size-3.5" />} disabled={!im?.ok || !to} onClick={() => test('imessage')}>Send test</Button>
-          </div>
-          {result.imessage && <div className="mt-1.5 text-[12px] text-muted">{result.imessage}</div>}
+          {im?.dry_run && <div className="mt-2 text-[12px] text-warn">The helper is in test mode (DRY_RUN), so texts are only logged. Stop it and Vigil starts a live one automatically.</div>}
+          <details className="mt-3 text-[12px] text-muted">
+            <summary className="cursor-pointer">Advanced: helper on another Mac</summary>
+            <div className="mt-2 flex gap-2">
+              <input className={inputCls} placeholder="http://127.0.0.1:8790" value={bridge} onChange={(e) => setBridge(e.target.value)} />
+              <Button size="sm" loading={saving} onClick={() => save({ imessage_bridge: bridge })}>Save</Button>
+            </div>
+          </details>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-2 text-[13.5px] font-semibold"><Ticket className="size-4 text-accent" /> HubSpot</div>

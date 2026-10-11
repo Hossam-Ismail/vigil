@@ -19,6 +19,7 @@
   "lists": "css",
   "order": [
     "cover",
+    "market",
     "how",
     "usecases",
     "photon",
@@ -26,8 +27,11 @@
     "safety",
     "parking",
     "why",
+    "cameras",
+    "trust",
     "start",
-    "cta"
+    "cta",
+    "hotdog"
   ],
   "sections": {
     "s1": {

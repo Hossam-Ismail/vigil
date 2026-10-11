@@ -25,7 +25,10 @@ from .cameras.discovery import RTSP_TEMPLATES, discover
 from .config import settings
 from .db import DB
 from .engine.core import Engine
-from .engine.actions import ActionRunner, normalize_handle, parse_reply
+from .engine.bridge import BridgeSupervisor
+from . import agent, privacy
+from .safety import Verdict, check_spec, check_text
+from .engine.actions import ActionRunner, normalize_handle
 from .engine.events import EventManager
 from .engine.notify import Notifier
 from .learning.active import ActiveLearner
@@ -59,6 +62,8 @@ class App:
         self.store = ModelStore(self.db, get_embedder)
         self.notifier = Notifier(self.db, self.db.get_kv("public_url", f"http://{settings.host}:{settings.port}"))
         self.actions = ActionRunner(self.db)
+        self.bridge = BridgeSupervisor(self.actions.bridge_url)
+        self.janitor = privacy.Janitor(self.db)
         self.events = EventManager(self.db, self.hub, self.store, self.notifier, self.actions)
         self.learner = ActiveLearner(self.db, self.store)
         self.engine = Engine(self.db, self.hub, self.store, self.events, self.learner)
@@ -72,6 +77,7 @@ class App:
             chans = [{"id": "desktop", "type": "desktop", "target": "", "enabled": False, "min_severity": "info"}] \
                 if platform.system() == "Darwin" else []
             self.db.set_kv("channels", chans)
+        privacy.apply(self.db.get_kv("privacy"))
         pref = self.db.get_kv("brain")
         if pref:
             try:
@@ -83,6 +89,8 @@ class App:
         threading.Thread(target=self._warm, daemon=True).start()
         self.engine.load_all()
         self.learner.start()
+        self.bridge.start()
+        self.janitor.start()
 
     def _warm(self) -> None:
         t = time.time()
@@ -91,6 +99,8 @@ class App:
         log.info("embedder ready in %.1fs", time.time() - t)
 
     def shutdown(self) -> None:
+        self.janitor.stop()
+        self.bridge.stop()
         self.learner.stop()
         self.engine.shutdown()
         self.hub.shutdown()
@@ -146,6 +156,56 @@ def _watch_out(w: dict, *, spark: bool = False) -> dict:
         "last_event": last_event,
         "event_count": n_events["n"] if n_events else 0,
     }
+
+
+def _metric_value(kind: str, b: dict) -> float:
+    """One bucket's value: average objects (count), total crossings, or % of time YES (occupancy)."""
+    n = max(1, int(b.get("n") or 0))
+    if kind == "crossings":
+        return round(float(b.get("sum") or 0), 2)
+    if kind == "occupancy":
+        return round(100.0 * float(b.get("sum") or 0) / n, 1)
+    return round(float(b.get("sum") or 0) / n, 2)
+
+
+def _metric_out(w: dict, hours: float = 24, bucket_s: float = 900) -> dict | None:
+    spec = WatchSpec.model_validate(w["spec"])
+    m = spec.metric
+    if m is None:
+        return None
+    now = time.time()
+    since = now - hours * 3600
+    rows = S().db.metric_buckets(w["id"], since, bucket_s)
+    rt = S().engine.runtimes.get(w["id"])
+    live = rt.live_bucket() if rt else None
+    if live and live["ts"] >= since:  # fold in the minute still being counted
+        key = live["ts"] - live["ts"] % bucket_s
+        hit = next((r for r in rows if r["ts"] == key), None)
+        if hit:
+            hit["sum"] += live["sum"]
+            hit["n"] += live["n"]
+            hit["max"] = max(hit["max"], live["max"])
+        else:
+            rows.append({"ts": key, "sum": live["sum"], "n": live["n"], "max": live["max"]})
+    series = [{"ts": r["ts"], "value": _metric_value(m.kind, r), "peak": round(float(r["max"]), 2)} for r in rows]
+    tot_sum = sum(float(r["sum"]) for r in rows)
+    tot_n = sum(int(r["n"]) for r in rows)
+    summary: dict = {"checks": tot_n}
+    if m.kind == "count":
+        summary.update(now=rt.count if rt and rt.count is not None else None,
+                       avg=round(tot_sum / tot_n, 2) if tot_n else None,
+                       peak=max((float(r["max"]) for r in rows), default=None))
+    elif m.kind == "crossings":
+        hour = S().db.metric_buckets(w["id"], now - 3600, 3600)
+        last_hour = sum(float(r["sum"]) for r in hour) + (live["sum"] if live and live["ts"] >= now - 3600 else 0)
+        span_h = min(hours, max(1 / 60, (now - min((r["ts"] for r in rows), default=now)) / 3600))
+        summary.update(total=round(tot_sum), last_hour=round(last_hour), per_hour=round(tot_sum / span_h, 1))
+    else:
+        summary.update(now=bool(rt.cond) if rt else None, pct=round(100.0 * tot_sum / tot_n, 1) if tot_n else None)
+    cam = S().db.camera(w["camera_id"])
+    return {"watch_id": w["id"], "name": w["name"], "status": w["status"], "camera_id": w["camera_id"],
+            "camera_name": cam["name"] if cam else "", "alerts": spec.alerts, "metric": m.model_dump(),
+            "hours": hours, "bucket_s": bucket_s, "summary": summary, "series": series}
 
 
 def _cam_or_404(cid: int):
@@ -209,6 +269,8 @@ def get_settings() -> dict:
         "integrations": _integrations_public(),
         "channels": S().db.get_kv("channels", []),
         "brain": brains.preference(),
+        "privacy": privacy.current(),
+        "policy_refusals": S().db.get_kv("policy_refusals", {}) or {},
         "brains": brains.options(),
         "public_url": S().notifier.public_url,
         "active_learning_per_hour": settings.active_learning_per_hour,
@@ -229,6 +291,8 @@ def put_settings(body: SettingsIn) -> dict:
                 else:
                     integ.pop(k, None)
         S().db.set_kv("integrations", integ)
+    if body.privacy is not None:
+        S().db.set_kv("privacy", privacy.apply({**privacy.current(), **body.privacy}))
     if body.brain is not None:
         try:
             brains.set_preference(body.brain)
@@ -251,7 +315,28 @@ def test_notify(channel_id: str = Body(..., embed=True)) -> dict:
 
 @app.get("/api/integrations/status")
 def integrations_status() -> dict:
-    return S().actions.status()
+    out = S().actions.status()
+    out["imessage"].update(managed=S().bridge.managed(), setup_problem=S().bridge.problem)
+    return out
+
+
+SETTINGS_PANES = {
+    "full_disk_access": "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles",
+    "automation": "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
+    "camera": "x-apple.systempreferences:com.apple.preference.security?Privacy_Camera",
+}
+
+
+@app.post("/api/system/open-settings")
+def open_settings(pane: str = Body(..., embed=True)) -> dict:
+    """Open the right page of macOS System Settings for a permission Vigil needs (local machine only)."""
+    url = SETTINGS_PANES.get(pane)
+    if not url or platform.system() != "Darwin":
+        raise HTTPException(400, "unknown settings page")
+    import subprocess
+
+    subprocess.Popen(["open", url])
+    return {"ok": True}
 
 
 @app.post("/api/actions/test")
@@ -269,22 +354,187 @@ def test_action(action: dict = Body(..., embed=True)) -> dict:
 
 @app.post("/api/imessage/inbound")
 def imessage_inbound(sender: str = Body(..., alias="from"), text: str = Body(...)) -> dict:
-    """A reply arrived through the Photon iMessage bridge. "yes"/"no" become training labels."""
+    """A text from the owner arrived through the Photon Spectrum bridge. Vigil answers it as an agent.
+
+    Returns {reply, attachments, react}; the bridge sends the reply in the same conversation with Spectrum.
+    Anyone who is not an owner (Settings -> iMessage) is ignored, with no reply.
+    """
     handle = normalize_handle(sender)
-    row = S().db.latest_outbox(handle)
-    if not row:
-        return {"ok": False, "reason": "no recent alert sent to this number"}
-    verdict = parse_reply(text)
-    if verdict is None:
-        S().actions.reply(sender, "Reply YES if the alert was right or NO if it wasn't, and Vigil will learn from it.")
-        return {"ok": False, "reason": "not a yes/no answer"}
-    ev = S().events.feedback(row["event_id"], verdict)
-    S().db.execute("UPDATE outbox SET answered=1 WHERE id=?", (row["id"],))
-    watch = S().db.watch(ev["watch_id"]) if ev else None
-    name = watch["name"] if watch else "this watch"
-    S().actions.reply(sender, (f"Thanks! Marked as right. “{name}” just learned from it." if verdict == "correct"
-                               else f"Got it, false alarm. “{name}” just learned from it and will be more careful."))
-    return {"ok": True, "event_id": row["event_id"], "feedback": verdict}
+    if handle not in agent.owners(S().actions.integrations()):
+        return {"ok": False, "reason": "not an owner", "reply": ""}
+    pending = S().db.get_kv(f"agent:pending:{handle}")
+    if pending and time.time() - float(pending.get("ts", 0)) > 600:
+        pending = None
+    intent = agent.route(text, pending=bool(pending))
+    try:
+        out = _agent_do(intent, sender, handle, pending)
+    except HTTPException as exc:
+        d = exc.detail if isinstance(exc.detail, dict) else {"reason": str(exc.detail)}
+        if d.get("code") == "policy":
+            out = {"reply": f"I won't watch for that. {d.get('reason', '')}\n{d.get('suggestion', '')}".strip(),
+                   "react": "‼️"}
+        else:
+            out = {"reply": f"I couldn't do that: {d.get('reason') or exc.detail}"}
+    except Exception as exc:  # noqa: BLE001
+        log.exception("iMessage agent failed")
+        out = {"reply": f"Something went wrong on my side ({str(exc)[:80]}). Try again in a moment."}
+    log.info("iMessage agent: %s -> %s", intent.kind, (out.get("reply") or "")[:80])
+    return {"ok": True, "intent": intent.kind, "attachments": [], "react": "", **out}
+
+
+def _agent_do(intent: "agent.Intent", sender: str, handle: str, pending: dict | None) -> dict:
+    db = S().db
+    cams = [c for c in db.cameras() if c.get("enabled", True)]
+    if intent.kind == "feedback":
+        row = db.latest_outbox(handle)
+        if not row:
+            return {"reply": "Thanks! There's no recent alert to grade, though. Text HELP to see what I can do."}
+        ev = S().events.feedback(row["event_id"], intent.arg)
+        db.execute("UPDATE outbox SET answered=1 WHERE id=?", (row["id"],))
+        watch = db.watch(ev["watch_id"]) if ev else None
+        name = watch["name"] if watch else "this watch"
+        if intent.arg == "correct":
+            return {"reply": f"Thanks! “{name}” just learned from it.", "react": "👍"}
+        return {"reply": f"Got it, false alarm. “{name}” just learned from it and will be more careful.", "react": "👍"}
+    if intent.kind == "help":
+        return {"reply": agent.HELP}
+    if intent.kind == "list":
+        ws = db.watches()
+        if not ws:
+            return {"reply": "I'm not watching anything yet. Text me something like “Text me when a package is left at the door”."}
+        lines = []
+        for w in ws[:12]:
+            cam = db.camera(w["camera_id"])
+            state = {"active": "on", "paused": "paused", "building": "learning", "draft": "not started"}.get(w["status"], w["status"])
+            lines.append(f"• {w['name']} ({cam['name'] if cam else '?'}): {state}{_agent_live(w)}")
+        return {"reply": "Here's what I'm watching:\n" + "\n".join(lines)}
+    if intent.kind in ("pause", "resume"):
+        ws = db.watches()
+        i = agent.best_match(intent.arg, [w["name"] for w in ws])
+        if i is None:
+            return {"reply": f"I couldn't find a watch called “{intent.arg}”. Text STATUS to see them all."}
+        w = ws[i]
+        if intent.kind == "pause":
+            pause_watch(w["id"])
+            return {"reply": f"Paused “{w['name']}”. Text “resume {w['name'].lower()}” to turn it back on.", "react": "👍"}
+        if w["status"] not in ("paused", "active"):
+            return {"reply": f"“{w['name']}” is still {w['status']}; it turns on by itself when it's ready."}
+        resume_watch(w["id"])
+        return {"reply": f"“{w['name']}” is back on.", "react": "👍"}
+    if intent.kind == "metric":
+        ms = [m for m in (_metric_out(w, 24, 3600) for w in db.watches()) if m]
+        if not ms:
+            return {"reply": "Nothing is being counted yet. Text me “Count the cars in the lot” to start."}
+        i = agent.best_match(intent.arg, [f"{m['name']} {m['camera_name']} {m['metric'].get('name', '')}" for m in ms])
+        if i is not None:
+            return {"reply": _agent_metric_line(ms[i])}
+        return {"reply": "I'm not counting that yet (text “Count the …” to start). Here's what I do count:\n"
+                         + "\n".join(_agent_metric_line(m) for m in ms[:4])}
+    if intent.kind == "look":
+        if not cams:
+            return {"reply": "No cameras are connected yet. Add one in the Vigil app first."}
+        i = agent.best_match(intent.arg, [c["name"] for c in cams])
+        out = _agent_look(cams[i if i is not None else 0])
+        if i is None and len(cams) > 1:
+            out["reply"] += "\n\nOther cameras: " + ", ".join(c["name"] for c in cams[1:]) + ". Ask “show me <name>”."
+        return out
+    if intent.kind == "pick" and pending:
+        i = (int(intent.arg) - 1) if intent.arg.isdigit() else agent.best_match(intent.arg, [c["name"] for c in cams])
+        if i is None or not 0 <= i < len(cams):
+            return {"reply": "Which camera? Reply with its number:\n" + _agent_cam_list(cams)}
+        db.set_kv(f"agent:pending:{handle}", None)
+        return _agent_create(pending["prompt"], cams[i], sender)
+    if intent.kind == "create":
+        _enforce(check_text(intent.arg))
+        if not cams:
+            return {"reply": "No cameras are connected yet. Add one in the Vigil app first."}
+        i = agent.best_match(intent.arg, [c["name"] for c in cams])
+        if i is None and len(cams) > 1:
+            db.set_kv(f"agent:pending:{handle}", {"prompt": intent.arg, "ts": time.time()})
+            return {"reply": "Which camera should I use? Reply with its number:\n" + _agent_cam_list(cams)}
+        return _agent_create(intent.arg, cams[i or 0], sender)
+    return {"reply": "I'm not sure what you mean. To start a new watch, begin with “Text me when…”. "
+                     "Text HELP to see everything I can do."}
+
+
+def _agent_cam_list(cams: list[dict]) -> str:
+    return "\n".join(f"{n}. {c['name']}" for n, c in enumerate(cams, 1))
+
+
+def _agent_live(w: dict) -> str:
+    rt = S().engine.runtimes.get(w["id"])
+    if not rt or w["status"] != "active" or (w["spec"] or {}).get("crossing", "none") != "none":
+        return ""  # a tripwire's live number is people in view, not crossings; STATUS/how many report those
+    s = rt.snapshot(spark=False)
+    if s["kind"] == "state" and s["cond"] is not None:
+        return " · right now: yes" if s["cond"] else " · right now: no"
+    if s["count"] is not None:
+        return f" · right now: {s['count']}"
+    return ""
+
+
+def _agent_metric_line(m: dict) -> str:
+    s, unit = m["summary"], m["metric"].get("unit") or ""
+    name = m["metric"].get("name") or m["name"]
+    if m["metric"]["kind"] == "count":
+        avg = f", {s['avg']:.1f} on average today" if s.get("avg") is not None else ""
+        return f"{name} ({m['camera_name']}): {s.get('now') if s.get('now') is not None else '–'} {unit} now{avg}".replace("  ", " ")
+    if m["metric"]["kind"] == "crossings":
+        return f"{name} ({m['camera_name']}): {s['last_hour']} in the last hour, {s['total']} today"
+    pct = f"{s['pct']}% of the time today" if s.get("pct") is not None else "no data yet"
+    return f"{name} ({m['camera_name']}): {pct}" + (" (yes right now)" if s.get("now") else "")
+
+
+def _agent_look(cam: dict) -> dict:
+    from .perception.detector import get_coco
+
+    frame = _latest_frame(cam["id"])
+    wanted = {"person": ["person"], "car": ["car"], "truck": ["truck"], "bus": ["bus"], "bicycle": ["bike"],
+              "motorcycle": ["motorcycle"], "dog": ["dog"], "cat": ["cat"]}
+    counts: dict[str, int] = {}
+    for d in get_coco().detect(frame, wanted, threshold=0.45):
+        counts[d.label] = counts.get(d.label, 0) + 1
+    out_dir = settings.data_dir / "media" / "agent"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / f"{int(time.time() * 1000)}.jpg"
+    cv2.imwrite(str(path), privacy.blur_faces(frame), [cv2.IMWRITE_JPEG_QUALITY, 85])
+    when = time.strftime("%-I:%M %p")
+    lines = [f"{cam['name']}, {when}: I see {agent.count_phrase(counts)}."]
+    for w in S().db.watches(cam["id"]):
+        live = _agent_live(w)
+        if live:
+            lines.append(f"• {w['name']}{live}")
+    return {"reply": "\n".join(lines), "attachments": [str(path)]}
+
+
+def _agent_create(prompt: str, cam: dict, sender: str) -> dict:
+    """Build a new watch from a text, exactly as the app does (same safety checks), and text when it's live."""
+    w = draft_watch(WatchDraftIn(camera_id=cam["id"], prompt=prompt))
+    spec = dict(w["spec"])
+    if not any(a.get("type") == "imessage" for a in spec.get("actions") or []):
+        spec["actions"] = [*(spec.get("actions") or []), {"type": "imessage", "target": sender, "object": "", "note": ""}][:4]
+        S().db.update_watch(w["id"], spec=spec)
+    build_watch(w["id"])
+    threading.Thread(target=_agent_follow_build, args=(w["id"], sender), daemon=True).start()
+    what = "count it" if spec.get("metric") and not spec.get("alerts", True) else "text you when it happens"
+    return {"reply": f"On it. I'm building “{w['name']}” on {cam['name']}: a small model just for this. "
+                     f"I'll tell you when it's live, then {what}.", "react": "👀"}
+
+
+def _agent_follow_build(wid: int, sender: str) -> None:
+    deadline = time.time() + 20 * 60
+    while time.time() < deadline:
+        time.sleep(3)
+        w = S().db.watch(wid)
+        if not w:
+            return
+        if w["status"] == "active":
+            S().actions.reply(sender, f"“{w['name']}” is live. Text STATUS any time, or “pause {w['name'].lower()}”.")
+            return
+        if w["status"] in ("failed", "error"):
+            S().actions.reply(sender, f"I couldn't finish “{w['name']}”: {w.get('status_detail') or 'unknown error'}. "
+                                      "Open the Vigil app to see why.")
+            return
 
 
 # ---------------------------------------------------------------------------------------------
@@ -393,6 +643,14 @@ def demo_control(cid: int, bin: str | None = Body(None), level: float | None = B
     return rt.scene.state()
 
 
+@app.get("/api/webcams")
+def webcams() -> list[dict]:
+    """Cameras attached to this machine, by name, built-in first (an iPhone via Continuity Camera is marked)."""
+    from .cameras.webcams import list_webcams
+
+    return [c.out() for c in list_webcams()]
+
+
 @app.get("/api/discover")
 def discover_cameras(timeout: float = 3.0) -> dict:
     return {"devices": discover(timeout=min(timeout, 8.0)), "templates": RTSP_TEMPLATES}
@@ -412,6 +670,16 @@ def _num(value, default: float) -> float:
         return float(value)
     except (TypeError, ValueError):
         return default
+
+
+def _enforce(v: Verdict) -> None:
+    """Refuse a request that breaks the safety policy; count refusals (category only, never the words)."""
+    if v.allowed:
+        return
+    counts = S().db.get_kv("policy_refusals", {}) or {}
+    counts[v.category] = int(counts.get(v.category, 0)) + 1
+    S().db.set_kv("policy_refusals", counts)
+    raise HTTPException(422, {"code": "policy", **v.out()})
 
 
 def _sanitize(raw: dict) -> WatchSpec:
@@ -443,6 +711,14 @@ def _sanitize(raw: dict) -> WatchSpec:
             acts.append({"type": a["type"], "target": "", "object": obj if obj in ("ticket", "task", "note") else "",
                          "note": str(a.get("note") or "")[:200]})
     raw["actions"] = acts[:4]
+    m = raw.get("metric")
+    mk = str((m or {}).get("kind") or "none").lower() if isinstance(m, dict) else "none"
+    mk = {"counting": "count", "number": "count", "crossing": "crossings", "line": "crossings",
+          "percent": "occupancy", "share": "occupancy", "time": "occupancy"}.get(mk, mk)
+    raw["metric"] = ({"kind": mk, "name": str(m.get("name") or raw.get("name") or "").strip()[:60],
+                      "unit": str(m.get("unit") or "").strip()[:20]}
+                     if mk in ("count", "crossings", "occupancy") else None)
+    raw["alerts"] = str(raw.get("alerts", True)).lower() not in ("false", "0", "no", "none") or not raw["metric"]
     for k in ("targets", "clarifications"):
         v = raw.get(k) or []
         raw[k] = [v] if isinstance(v, str) else [str(x) for x in v if x]
@@ -479,6 +755,7 @@ def draft_watch(body: WatchDraftIn) -> dict:
     prompt = body.prompt.strip()
     if len(prompt) < 4:
         raise HTTPException(400, "describe what to watch for")
+    _enforce(check_text(prompt))
     frame = _latest_frame(body.camera_id)
     brain = get_brain()
     warnings: list[str] = []
@@ -490,7 +767,12 @@ def draft_watch(body: WatchDraftIn) -> dict:
         brain = HeuristicBrain()
         raw = brain.compile(prompt, frame, cam["name"])
     compile_ms = int((time.time() - t) * 1000)
+    pol = raw.get("policy") if isinstance(raw, dict) else None
+    if isinstance(pol, dict) and str(pol.get("allowed", True)).lower() in ("false", "0", "no"):
+        _enforce(Verdict(False, str(pol.get("category") or "policy"), str(pol.get("reason") or "This request is outside what Vigil watches for."),
+                         str(pol.get("suggestion") or "Describe an object, event or condition instead.")))
     spec = _sanitize(raw)
+    _enforce(check_spec(spec.model_dump()))
     t = time.time()
     try:
         zone, zinfo = propose_zone(frame, spec, brain)
@@ -520,6 +802,22 @@ def list_watches(camera_id: int | None = None) -> list[dict]:
     return [_watch_out(w) for w in S().db.watches(camera_id)]
 
 
+@app.get("/api/metrics")
+def list_metrics(hours: float = 24, bucket: float = 900) -> list[dict]:
+    """Every watch that keeps a number (counts, crossings, share of time), with a summary and a time series."""
+    hours, bucket = min(max(hours, 0.1), 24 * 31), min(max(bucket, 60), 86400)
+    out = [_metric_out(w, hours, bucket) for w in S().db.watches()]
+    return [m for m in out if m]
+
+
+@app.get("/api/watches/{wid}/metrics")
+def watch_metrics(wid: int, hours: float = 24, bucket: float = 900) -> dict:
+    m = _metric_out(_watch_or_404(wid), min(max(hours, 0.1), 24 * 31), min(max(bucket, 60), 86400))
+    if m is None:
+        raise HTTPException(404, "this watch keeps no metric")
+    return m
+
+
 @app.get("/api/watches/{wid}")
 def get_watch(wid: int) -> dict:
     return _watch_out(_watch_or_404(wid), spark=True)
@@ -532,6 +830,7 @@ def patch_watch(wid: int, body: WatchPatch) -> dict:
     if body.name is not None:
         fields["name"] = body.name[:60]
     if body.spec is not None:
+        _enforce(check_spec(body.spec.model_dump()))
         old = WatchSpec.model_validate(w["spec"])
         new = body.spec
         fields["spec"] = new.model_dump()

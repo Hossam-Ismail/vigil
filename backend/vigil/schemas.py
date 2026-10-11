@@ -14,6 +14,7 @@ CountOp = Literal[">=", ">", "<=", "<", "=="]
 Point = tuple[float, float]
 Crossing = Literal["none", "any", "down", "up", "left", "right"]
 ActionType = Literal["imessage", "hubspot", "webhook", "slack", "ntfy"]
+MetricKind = Literal["count", "crossings", "occupancy"]
 
 
 class Action(BaseModel):
@@ -30,6 +31,19 @@ class Action(BaseModel):
     target: str = ""
     object: str = ""
     note: str = ""
+
+
+class Metric(BaseModel):
+    """A number a watch keeps over time, shown on the Metrics page and in the watch's chart.
+
+    count:     how many target objects are in the zone right now (a gauge: average and peak per period)
+    crossings: how many tracked objects crossed the line (a counter: total per period, e.g. walk-ins)
+    occupancy: share of the time the watch's answer is YES (e.g. % of the shift the staging area sat empty)
+    """
+
+    kind: MetricKind
+    name: str  # what the number is, as the user would say it ("People waiting to pay")
+    unit: str = ""  # "people", "walk-ins", "%"
 
 
 class Zone(BaseModel):
@@ -81,6 +95,8 @@ class WatchSpec(BaseModel):
     check_interval_s: float = 1.0
     clarifications: list[str] = Field(default_factory=list)
     actions: list[Action] = Field(default_factory=list)
+    metric: Metric | None = None  # keep a number over time instead of (or as well as) a yes/no alert
+    alerts: bool = True  # False = a metric-only watch: it measures and charts, it never alerts
 
 
 class CameraIn(BaseModel):
@@ -126,3 +142,4 @@ class SettingsIn(BaseModel):
     channels: list[NotifyChannel] | None = None
     brain: str | None = None
     integrations: dict | None = None  # imessage_to, imessage_bridge, hubspot_token, public_url
+    privacy: dict | None = None  # private_mode, blur_faces, keep_history_days, keep_events_days

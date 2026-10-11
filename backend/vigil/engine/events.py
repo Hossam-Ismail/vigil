@@ -27,6 +27,7 @@ from ..schemas import WatchSpec
 from .actions import ActionRunner
 from .notify import Notifier
 from .runtime import Trigger
+from ..privacy import blur_faces
 
 log = logging.getLogger("vigil.events")
 
@@ -62,7 +63,7 @@ def write_clip(frames: list[tuple[float, bytes]], path: Path, fps: float) -> boo
     import av
 
     imgs = [cv2.imdecode(np.frombuffer(j, np.uint8), cv2.IMREAD_COLOR) for _, j in frames]
-    imgs = [i for i in imgs if i is not None]
+    imgs = [blur_faces(i) for i in imgs if i is not None]
     if len(imgs) < 2:
         return False
     h, w = imgs[0].shape[:2]
@@ -106,7 +107,8 @@ class EventManager:
                                 {"track_ids": trig.track_ids, "boxes": [[list(b), l] for b, l in trig.boxes]})
         d = event_dir(eid)
         snap = d / "snapshot.jpg"
-        cv2.imwrite(str(snap), annotate(frame, spec, trig), [cv2.IMWRITE_JPEG_QUALITY, 86])
+        # the snapshot is what gets texted and shown, so faces are blurred; the crop stays local for training
+        cv2.imwrite(str(snap), annotate(blur_faces(frame), spec, trig), [cv2.IMWRITE_JPEG_QUALITY, 86])
         crop_img = crop(frame, trig.crop_box, pad=0.05) if trig.crop_box else frame
         crop_path = d / "crop.jpg"
         cv2.imwrite(str(crop_path), crop_img, [cv2.IMWRITE_JPEG_QUALITY, 90])

@@ -1,6 +1,6 @@
 """Per-watch actions that run when an alert is confirmed: iMessage (Photon), HubSpot, webhooks, Slack, ntfy.
 
-iMessage goes through a small local bridge built on Photon's imessage-kit (see /imessage-bridge). Each iMessage
+iMessage goes through a small local bridge built on Photon's Spectrum SDK (see /imessage-bridge). Each iMessage
 is recorded in the outbox so a reply ("yes", "no") can be matched back to its event and used as a training label.
 """
 
@@ -19,6 +19,11 @@ from ..schemas import Action
 log = logging.getLogger("vigil.actions")
 
 HUBSPOT_API = "https://api.hubapi.com"
+
+
+ASK_UNTIL = 5  # a new watch asks after every alert until it has this many answers
+ASK_BELOW_CONFIDENCE = 0.75  # ...and whenever the double-check was less sure than this
+ASK_EVERY_S = 24 * 3600  # otherwise one spot check per watch per day
 
 
 class ActionRunner:
@@ -66,15 +71,34 @@ class ActionRunner:
     def _link(self, event: dict) -> str:
         return f"{self.public_url()}/events?open={event['id']}"
 
+    def should_ask(self, event: dict, watch: dict) -> bool:
+        """Ask for feedback only when the answer is worth someone's time, not on every alert.
+
+        Always while the watch is new (fewer than ASK_UNTIL answers so far) or when the double-check was unsure;
+        otherwise at most one spot check per watch per ASK_EVERY_S. A reply is still used whenever someone
+        sends one, asked or not.
+        """
+        answered = self.db.one("SELECT COUNT(*) AS n FROM events WHERE watch_id=? AND feedback IS NOT NULL",
+                               (watch["id"],))
+        detail = event.get("detail") or {}
+        conf = detail.get("verify_confidence")
+        unsure = event.get("status") == "unverified" or (conf is not None and conf < ASK_BELOW_CONFIDENCE)
+        last = float(self.db.get_kv(f"ask:{watch['id']}", 0) or 0)
+        ask = (answered["n"] if answered else 0) < ASK_UNTIL or unsure or event["ts"] - last >= ASK_EVERY_S
+        if ask:
+            self.db.set_kv(f"ask:{watch['id']}", event["ts"])
+        return ask
+
     def _imessage(self, a: Action, event, watch, camera, snapshot) -> dict:
         to = (a.target or self.integrations().get("imessage_to") or "").strip()
         if not to:
             raise RuntimeError("no iMessage recipient; set one on the action or in Settings")
         when = time.strftime("%-I:%M %p", time.localtime(event["ts"]))
+        ask = self.should_ask(event, watch)
         text = (f"{event['message']} ({camera['name']}, {when})"
                 + (f"\n{event['verdict']}" if event.get("verdict") else "")
                 + (f"\n{a.note}" if a.note else "")
-                + "\n\nWas this right? Reply YES or NO and Vigil will learn from it.")
+                + ("\n\nWas this right? Reply YES or NO and Vigil will learn from it." if ask else ""))
         body = {"to": to, "text": text, "attachments": [str(snapshot)] if snapshot and snapshot.exists() else []}
         r = self.http.post(self.bridge_url() + "/send", json=body)
         r.raise_for_status()

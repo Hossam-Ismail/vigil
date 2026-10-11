@@ -41,6 +41,47 @@ def _noun(phrase: str) -> str:
     return " ".join(words[-2:]) if words else phrase
 
 
+ALERT_WORDS = r"\b(when|whenever|if|alert|notify|text me|tell me|let me know|ping|message me)\b"
+
+
+def _metric_for(text: str, spec: dict) -> dict:
+    """Requests that ask for a number over time rather than (or as well as) an alert.
+
+    "count walk-ins" / "how many people come in" -> crossings on a tripwire; "how many people are waiting" ->
+    a count of objects in view; "what % of the time is the bin empty" -> occupancy (share of time YES).
+    """
+    out: dict = {"metric": None, "alerts": True}
+    noun_m = re.search(r"\b(?:how many|number of|count(?: the| how many| all)?)\s+([a-z]+)", text)
+    noun = _noun(_clean(noun_m.group(1))) if noun_m else ""
+    noun = noun if noun not in ("", "everyone", "everybody", "each", "of", "the") else "people"
+    single = coco_class_for(re.sub(r"s$", "", noun)) or ("person" if noun in ("people", "persons") else re.sub(r"s$", "", noun))
+    if re.search(r"\bwalk-?ins?\b|\bfoot ?traffic\b|\b(?:how many|count|number of)\b.*\b(?:come in|comes in|enter|enters|walk in|walks in|arrive|arrives|leave|leaves|pass|passes)\b", text):
+        leaving = re.search(r"\b(leave|leaves|leaving|exit|exits)\b", text)
+        if not coco_class_for(single) or single == "walk":
+            single = "person"
+        plural = "people" if single == "person" else f"{single}s"
+        name = ("Walk-ins" if single == "person" and not leaving
+                else f"{plural.capitalize()} {'leaving' if leaving else 'arriving'}")
+        out["metric"] = {"kind": "crossings", "name": name, "unit": plural}
+        out.update(kind="presence", targets=[single], crossing="up" if leaving else "down", trigger="per_object",
+                   positive_label=f"a {single}", negative_label="an empty background", min_duration_s=0,
+                   name=out["metric"]["name"])
+    elif re.search(r"\b(?:how many|number of|count)\b", text):
+        where = spec.get("locate", "").removeprefix("the ")
+        out["metric"] = {"kind": "count", "name": f"{noun.capitalize()} in view" if where in ("", "area")
+                         else f"{noun.capitalize()} at {where}", "unit": noun}
+        if spec.get("kind") != "count":
+            out.update(kind="count", targets=[single], count_op=">=", count_value=1,
+                       positive_label=f"a {single}", negative_label="an empty background", name=out["metric"]["name"])
+    elif re.search(r"(?:%|percent|share|how much|what part) of (?:the )?(?:time|day|shift|hour)|\bhow often\b|\bhow long\b", text):
+        out["metric"] = {"kind": "occupancy", "name": f"% of time: {spec.get('positive_label') or 'yes'}"[:60],
+                         "unit": "%"}
+    if out["metric"] is not None:
+        rest = re.sub(r"\b(?:how many|how often|how long)\b", "", text)
+        out["alerts"] = bool(re.search(ALERT_WORDS, rest))
+    return out
+
+
 class HeuristicBrain(Brain):
     name = "heuristic"
     label = "Built-in (offline, basic)"
@@ -58,7 +99,9 @@ class HeuristicBrain(Brain):
 
     # ---- compile ------------------------------------------------------
     def compile(self, request: str, frame: np.ndarray | None, camera_name: str) -> dict:
-        text = request.lower().strip()
+        full = request.lower().strip()
+        text = re.sub(r"^(?:what|how much)\s*(?:%|percent|share|part)?\s*of (?:the )?(?:time|day|shift|hour)\s+(is|are)\s+(.+?)\s+"
+                      r"(empty|full|open|closed|blocked|occupied|free|on|off)\b", r"when \2 \1 \3", full)
         spec = {
             "name": request.strip()[:40],
             "kind": "state",
@@ -90,6 +133,7 @@ class HeuristicBrain(Brain):
                   "at least": ">=", "at most": "<="}[count_m.group(1)]
             noun = _noun(_clean(count_m.group(3)))
             noun_singular = re.sub(r"s$", "", noun)
+            noun_singular = coco_class_for(noun_singular) or ("person" if "people" in count_m.group(3) else noun_singular)
             spec.update(kind="count", count_op=op, count_value=int(count_m.group(2)), targets=[noun_singular],
                         positive_label=f"a {noun_singular}", negative_label="an empty background",
                         name=f"{noun_singular.title()} count {op} {count_m.group(2)}",
@@ -141,7 +185,9 @@ class HeuristicBrain(Brain):
             spec["actions"].append({"type": "slack", "object": "", "note": ""})
         if "webhook" in text:
             spec["actions"].append({"type": "webhook", "object": "", "note": ""})
-        spec["summary"] = f"I'll watch for: {spec['positive_label']}."
+        spec.update(_metric_for(full, spec))
+        spec["summary"] = (f"I'll track {spec['metric']['name'].lower()}." if spec.get("metric")
+                           and not spec["alerts"] else f"I'll watch for: {spec['positive_label']}.")
         return spec
 
     # ---- judgments ----------------------------------------------------

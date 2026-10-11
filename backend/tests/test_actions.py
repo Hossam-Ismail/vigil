@@ -92,3 +92,19 @@ def test_never_seen_events_ignore_past_footage(tmp_path, monkeypatch):
     db.add_sample(wid, "s.jpg", w0 / 10, label=1, source="user", origin="feedback")
     head = store.retrain(wid)
     assert head.metrics["n"] == 14  # once it has really happened, all footage is fair game
+
+
+def test_feedback_is_asked_only_occasionally(tmp_path):
+    db, r = runner(tmp_path, {"imessage_to": "+14155550100"})
+    cam = db.add_camera("Dock", "demo", "shelf")
+    w = db.add_watch(cam["id"], "Lane 3 empty", "q", {})
+    watch = {**WATCH, "id": w["id"]}
+    for i in range(5):  # a new watch asks after every alert until it has 5 answers
+        eid = db.add_event(w["id"], cam["id"], 1_760_000_000.0 + i, 0.9, "empty", {})
+        assert r.should_ask({"id": eid, "ts": 1_760_000_000.0 + i}, watch)
+        db.update_event(eid, feedback="correct")
+    t = 1_760_000_100.0
+    assert not r.should_ask({"id": 99, "ts": t}, watch)  # sure, answered enough, asked a minute ago
+    assert r.should_ask({"id": 99, "ts": t, "detail": {"verify_confidence": 0.6}}, watch)  # double-check unsure
+    assert r.should_ask({"id": 99, "ts": t + 24 * 3600}, watch)  # daily spot check
+    assert not r.should_ask({"id": 99, "ts": t + 24 * 3600 + 60}, watch)

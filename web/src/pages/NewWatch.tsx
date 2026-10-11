@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, Check, Crosshair, Eye, Maximize, Sparkles, Wand2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Check, Crosshair, Eye, Maximize, ShieldAlert, Sparkles, Wand2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { CameraView } from '../components/CameraView'
@@ -7,7 +7,7 @@ import { SampleThumb } from '../components/SampleThumb'
 import { Button, Card, cx, KindBadge, Spinner } from '../components/ui'
 import { ZoneEditor } from '../components/ZoneEditor'
 import { PlanEditor } from '../components/PlanEditor'
-import { api, type Camera, type Health, type Metrics, type Watch, type WatchSpec } from '../lib/api'
+import { api, type ApiError, type Camera, type Health, type Metrics, type Watch, type PolicyRefusal, type WatchSpec } from '../lib/api'
 import { pct } from '../lib/format'
 import { useFetch, useNow } from '../lib/hooks'
 import { clearBuild, useLive } from '../lib/live'
@@ -195,6 +195,7 @@ export function NewWatch() {
   const cam = cams.data?.find((c) => c.id === cameraId)
   const [spec, setSpec] = useState<WatchSpec | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [policy, setPolicy] = useState<PolicyRefusal | null>(null)
   const [phase, setPhase] = useState<'compiling' | 'review' | 'building'>('compiling')
   const [busy, setBusy] = useState(false)
   const started = useRef(false)
@@ -212,6 +213,7 @@ export function NewWatch() {
       setParams({ watch: String(w.id) }, { replace: true })
     } catch (e) {
       setError((e as Error).message)
+      setPolicy((e as ApiError).policy ?? null)
     }
   }
 
@@ -283,7 +285,19 @@ export function NewWatch() {
         <div className="text-[15px] leading-6">“{prompt}”</div>
       </Card>
 
-      {error && (
+      {policy && (
+        <Card className="mb-5 border-warn/50 bg-warn-soft px-4 py-3 text-[13.5px]">
+          <div className="flex items-center gap-2 font-medium text-warn"><ShieldAlert className="size-4" /> Vigil won't watch for this</div>
+          <div className="mt-1 text-ink">{policy.reason}</div>
+          <div className="mt-1 text-ink-2">{policy.suggestion}</div>
+          <div className="mt-2 text-[12px] text-muted">Vigil watches objects, events and conditions, never kinds of people. It does not identify anyone or watch private spaces.</div>
+          <div className="mt-3 flex gap-2">
+            <Button size="sm" onClick={() => nav('/')}>Write a different request</Button>
+          </div>
+        </Card>
+      )}
+
+      {error && !policy && (
         <Card className="mb-5 border-alert/40 bg-alert-soft px-4 py-3 text-[13.5px]">
           <div className="flex items-center gap-2 font-medium text-alert"><AlertTriangle className="size-4" /> Something went wrong</div>
           <div className="mt-1 text-ink-2">{error}</div>

@@ -40,6 +40,7 @@ class LibModel:
     measured: str = ""            # what we measured, if anything
     examples: list[str] = field(default_factory=list)
     note: str = ""
+    webcam: list[str] = field(default_factory=list)   # prompts that demo well live on a laptop webcam
 
     def card(self) -> dict:
         d = asdict(self)
@@ -51,7 +52,9 @@ LIBRARY: list[LibModel] = [
     LibModel("coco", "People, vehicles & everyday objects", "Finds and counts 80 everyday things: people, cars, "
              "trucks, bikes, dogs, cats, bags, bottles, chairs…", "roboflow/rf-detr (COCO)", "coco", True, "Apache-2.0",
              None, examples=["How many people are waiting in line?", "Text me when a car pulls into the driveway",
-                             "Tell me when the dog is on the couch"]),
+                             "Tell me when the dog is on the couch"],
+             webcam=["Count how many people are in front of the camera",
+                     "Text me when someone is on their phone"]),
     LibModel("owl", "Find anything by name", "Finds objects from a description, even ones no model was trained on: "
              "a package, a ladder, a pallet", "google/owlv2-base-patch16-ensemble", "owl", True, "Apache-2.0", None,
              examples=["Text me when a package is left at the door", "Tell me if a ladder is left in the aisle"]),
@@ -81,7 +84,9 @@ LIBRARY: list[LibModel] = [
     LibModel("actions", "Everyday actions (400)", "Watches a 2-second clip and names the action: smoking, drinking, "
              "texting, mopping, cleaning, eating, exercising and 390 more",
              "MCG-NJU/videomae-base-finetuned-kinetics", "video", True, "CC-BY-NC-4.0 (non-commercial)", 159,
-             threshold=0.2, examples=["Text me if anyone is smoking by the entrance",
+             threshold=0.2, webcam=["Text me when someone is drinking", "Tell me when I touch my hair",
+                                  "Text me if anyone claps", "Alert me when someone yawns"],
+             examples=["Text me if anyone is smoking by the entrance",
                                       "Tell me when someone is mopping the floor", "Text me if someone is drinking in the lab"],
              note="Non-commercial license: fine for the beta and demos, needs a commercial alternative to sell."),
     LibModel("xclip", "Any action, described (zero-shot)", "Compares a 1.5-second clip with any wording you give",
@@ -136,16 +141,32 @@ def _words(text: str) -> set[str]:
     return {w for w in re.findall(r"[a-z]+", text.lower()) if w not in _STOP and len(w) > 2}
 
 
+def _stem(w: str) -> str:
+    """drinks / drinking / drink -> drink; claps / clapping -> clap; fixes / fixing -> fix."""
+    for suf in ("ing", "es", "s"):
+        if w.endswith(suf) and len(w) - len(suf) >= 3:
+            w = w[: -len(suf)]
+            break
+    if len(w) >= 4 and w[-1] == w[-2] and w[-1] not in "aeiouls":
+        w = w[:-1]
+    return w
+
+
+ALIASES = [({"touch", "hair"}, "fixing hair"), ({"phone", "typing"}, "texting")]
+
+
 def match_action(text: str) -> list[str]:
-    """Kinetics actions named in the request: every word of the action's name must be in the request
-    ("smoking", "mopping floor", "drinking beer"); "floor"/"hands" may be left out ("someone mopping")."""
-    words = _words(text)
-    if not any(w.endswith("ing") for w in words):
-        return []
+    """Kinetics actions named in the request, in any verb form ("drinks", "is drinking", "mopping the floor"):
+    every word of the action's name must be in the request ("floor"/"hands" may be left out)."""
+    stems = {_stem(w) for w in _words(text)}
     out = []
     for label in kinetics_labels():
         lw = _words(label)
-        if any(w.endswith("ing") for w in lw) and (lw - {"floor", "hands"}) <= words:
+        verbs = {w for w in lw if w.endswith("ing")}
+        if verbs and {_stem(w) for w in lw - {"floor", "hands"}} <= stems:
+            out.append(label)
+    for need, label in ALIASES:
+        if need <= stems and label not in out and label in kinetics_labels():
             out.append(label)
     return out[:8]
 

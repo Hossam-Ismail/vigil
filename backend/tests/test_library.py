@@ -20,6 +20,15 @@ def test_actions_need_every_word(monkeypatch):
     assert lib.match("Text me when the garage door is open") is None
 
 
+def test_verb_forms_and_aliases(monkeypatch):
+    monkeypatch.setattr(lib, "kinetics_labels", lambda: ["drinking", "clapping", "yawning", "fixing hair", "texting"])
+    assert lib.match("Text me when someone drinks")["yes"] == ["drinking"]
+    assert lib.match("Tell me if anyone claps")["yes"] == ["clapping"]
+    assert lib.match("Alert me when someone yawns")["yes"] == ["yawning"]
+    assert lib.match("Tell me when I touch my hair")["yes"] == ["fixing hair"]
+    assert lib.match("Text me if someone is texting")["yes"] == ["texting"]
+
+
 def test_library_has_ten_with_two_not_native():
     assert len(lib.LIBRARY) == 10
     assert sorted(m.id for m in lib.LIBRARY if not m.native) == ["pose", "xclip"]

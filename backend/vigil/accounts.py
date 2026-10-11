@@ -31,6 +31,8 @@ CODE_TTL_S = 600
 CODE_TRIES = 5
 RESEND_AFTER_S = 30
 LOGIN_TRIES = 8              # failed sign-ins per email per 15 minutes before a pause
+# a free demo sign-in that skips every gate (no .edu, no code, no questions, no AI key); VIGIL_DEMO_LOGIN="" turns it off
+DEMO_LOGIN = os.environ.get("VIGIL_DEMO_LOGIN", "test:123")
 EDU = re.compile(r"^[a-z0-9._%+-]+@([a-z0-9-]+\.)+edu(\.[a-z]{2})?$")
 
 SCHEMA = """
@@ -126,6 +128,25 @@ class Accounts:
     def __init__(self, db: DB):
         self.db = db
         db._conn.executescript(SCHEMA)
+        self.ensure_demo()
+
+    def ensure_demo(self) -> None:
+        """The free demo account (username and password from VIGIL_DEMO_LOGIN, default test / 123)."""
+        if ":" not in DEMO_LOGIN:
+            self.db.execute("DELETE FROM users WHERE json_extract(profile, '$.demo') = 1")
+            return
+        name, pw = DEMO_LOGIN.split(":", 1)
+        name = normalize_email(name)
+        profile = json.dumps({"use": "business", "business_type": "Demo", "goals": "Trying Vigil with the demo account",
+                              "demo": True})
+        u = self.db.one("SELECT * FROM users WHERE email=?", (name,))
+        now = time.time()
+        if u is None:
+            self.db.execute("INSERT INTO users(email, pw_hash, created, verified, consent, profile, onboarded) "
+                            "VALUES (?,?,?,?,?,?,?)", (name, hash_password(pw), now, now, now, profile, now))
+        elif not check_password(pw, u["pw_hash"]) or not json.loads(u["profile"] or "{}").get("demo"):
+            self.db.execute("UPDATE users SET pw_hash=?, profile=?, verified=?, onboarded=? WHERE id=?",
+                            (hash_password(pw), profile, now, now, u["id"]))
 
     # ---- users ----------------------------------------------------------------
     def user(self, uid: int) -> dict | None:
@@ -143,6 +164,8 @@ class Accounts:
 
     @staticmethod
     def next_step(u: dict) -> str:
+        if json.loads(u.get("profile") or "{}").get("demo"):
+            return "ready"
         if not u["verified"]:
             return "verify"
         if not json.loads(u.get("profile") or "{}").get("use"):

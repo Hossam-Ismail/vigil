@@ -52,6 +52,18 @@ export function Welcome() {
     }
   }
 
+  const demo = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      setMe((await api.post<{ user: Me }>('/api/auth/login', { email: 'test', password: '123' })).user)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <Shell>
       <Card className="p-6">
@@ -68,8 +80,9 @@ export function Welcome() {
           {mode === 'signup' ? 'Tell your cameras what to watch for. The beta is open to .edu email addresses.' : 'Sign in with your school email.'}
         </p>
         <form onSubmit={submit} className="mt-5 flex flex-col gap-3.5">
-          <Field label="School email">
-            <input className={inputCls} type="email" autoComplete="email" required placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Field label={mode === 'signup' ? 'School email' : 'School email or username'}>
+            <input className={inputCls} type={mode === 'signup' ? 'email' : 'text'} autoComplete={mode === 'signup' ? 'email' : 'username'} required
+              placeholder={mode === 'signup' ? 'you@university.edu' : 'you@university.edu'} value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
           <Field label="Password" hint={mode === 'signup' ? 'At least 8 characters, with a letter and a number' : undefined}>
             <input className={inputCls} type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required minLength={mode === 'signup' ? 8 : 1}
@@ -89,6 +102,10 @@ export function Welcome() {
             {mode === 'signup' ? 'Create account' : 'Sign in'}
           </Button>
         </form>
+        <div className="mt-4 flex items-center gap-3 text-[12px] text-muted">
+          <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
+        </div>
+        <Button className="mt-4 w-full justify-center" loading={busy} onClick={demo}>Try the demo (no sign-up)</Button>
       </Card>
     </Shell>
   )

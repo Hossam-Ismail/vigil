@@ -1,8 +1,7 @@
-import { Boxes, CheckCircle2, CircleDashed, ExternalLink, FlaskConical, Gauge, Play } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Boxes, CheckCircle2, CircleDashed, ExternalLink, FlaskConical, Gauge, Laptop } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Page } from '../components/Layout'
 import { Button, Card, cx } from '../components/ui'
-import type { Camera } from '../lib/api'
 import { useFetch, useInterval } from '../lib/hooks'
 
 export type LibModel = {
@@ -19,6 +18,7 @@ export type LibModel = {
   measured: string
   examples: string[]
   note: string
+  webcam: string[]
   status: string
   watches: string[]
 }
@@ -26,28 +26,36 @@ export type LibModel = {
 /** The prebuilt model library: what each model answers, how fast it is here, and prompts that pick it. */
 export function Library() {
   const lib = useFetch<LibModel[]>('/api/library')
-  const cams = useFetch<Camera[]>('/api/cameras')
   useInterval(() => lib.reload(), 5000)
-  const nav = useNavigate()
-  const camId = cams.data?.[0]?.id
-  const tryPrompt = (p: string) => camId !== undefined && nav(`/new?camera=${camId}&prompt=${encodeURIComponent(p)}`)
+  const webcam = (lib.data ?? []).flatMap((m) => m.webcam.map((p) => ({ p, m: m.name })))
   const native = (lib.data ?? []).filter((m) => m.native)
   const other = (lib.data ?? []).filter((m) => !m.native)
   return (
     <Page wide title={<span className="flex items-center gap-2"><Boxes className="size-6 text-accent" /> Model library</span>}
-      subtitle="Ten prebuilt vision models, already trained. Describe what to watch for and Vigil picks the right one automatically: no training, live in seconds.">
+      subtitle="Ten prebuilt vision models, already trained. Type what to watch for on any camera and Vigil picks the right one: no training, live in seconds.">
+      {webcam.length > 0 && (
+        <Card className="mb-6 p-4">
+          <div className="flex items-center gap-2 text-[13px] font-semibold"><Laptop className="size-4 text-accent" /> Demo live on your webcam</div>
+          <div className="mt-1 text-[12px] text-muted">Pick your webcam as the camera and type one of these. The model in brackets is the one Vigil uses for it.</div>
+          <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+            {webcam.map(({ p, m }) => (
+              <div key={p} className="text-[13px]">“{p}” <span className="text-[11.5px] text-muted">({m})</span></div>
+            ))}
+          </div>
+        </Card>
+      )}
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {native.map((m) => <ModelCard key={m.id} m={m} onTry={tryPrompt} />)}
+        {native.map((m) => <ModelCard key={m.id} m={m} />)}
       </div>
       <h2 className="mt-10 mb-3 text-[13px] font-semibold uppercase tracking-wide text-muted">Also in the library, not running watches yet</h2>
       <div className="grid gap-3 md:grid-cols-2">
-        {other.map((m) => <ModelCard key={m.id} m={m} onTry={tryPrompt} />)}
+        {other.map((m) => <ModelCard key={m.id} m={m} />)}
       </div>
     </Page>
   )
 }
 
-function ModelCard({ m, onTry }: { m: LibModel; onTry: (p: string) => void }) {
+function ModelCard({ m }: { m: LibModel }) {
   const ready = m.status === 'ready'
   return (
     <Card className={cx('flex flex-col p-4', !m.native && 'opacity-90')}>
@@ -73,11 +81,9 @@ function ModelCard({ m, onTry }: { m: LibModel; onTry: (p: string) => void }) {
       <div className="mt-auto pt-3">
         {m.native ? (
           <div className="flex flex-col gap-1.5">
-            {m.examples.slice(0, 2).map((e) => (
-              <button key={e} onClick={() => onTry(e)}
-                className="flex items-center gap-1.5 rounded-md border border-line px-2 py-1 text-left text-[12px] text-muted hover:border-accent hover:text-ink">
-                <Play className="size-3 shrink-0 text-accent" /><span className="truncate">{e}</span>
-              </button>
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Type, for example</div>
+            {m.examples.slice(0, 3).map((e) => (
+              <div key={e} className="text-[12px] leading-snug text-ink-2">“{e}”</div>
             ))}
             {m.watches.length > 0 && <div className="text-[11.5px] text-accent">Running: {m.watches.join(', ')}</div>}
           </div>

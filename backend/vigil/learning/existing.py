@@ -26,11 +26,11 @@ def choose(spec: WatchSpec) -> dict:
         from ..perception.library import BY_ID
 
         m = BY_ID[spec.library["id"]]
-        yes = ", ".join(spec.library.get("yes") or [])
-        return {"state": "existing", "prebuilt": m.id,
-                "models": [{"name": m.name, "url": m.card()["url"], "trained_on": f"{m.repo} ({m.license})"}],
-                "how": f"Prebuilt model from the library. It answers YES on: {yes}."
-                       + (f" Runs in about {m.speed_ms} ms on this Mac." if m.speed_ms else "")}
+        what = spec.positive_label or ", ".join(spec.library.get("yes") or [])
+        how = (f"Watches every 2-second clip for {what}." if m.kind == "video" else
+               f"Looks for {what} in every frame.")
+        return {"state": "existing", "models": [{"name": m.repo.split("/")[-1], "url": m.card()["url"],
+                                                 "trained_on": "public data"}], "how": how}
     if spec.kind == "state":
         return {"state": "existing", "models": [SIGLIP], "how": "Each frame is compared with “" + spec.positive_label
                 + "” versus “" + spec.negative_label + "”; the closer one is the answer."}

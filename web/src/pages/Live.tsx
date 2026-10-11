@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { CameraView } from '../components/CameraView'
 import { Page } from '../components/Layout'
 import { PromptBar } from '../components/PromptBar'
-import { LibraryStrip } from './Library'
 import { Button, Card, cx, Empty } from '../components/ui'
 import { WatchChip } from '../components/WatchChip'
 import type { Camera, Watch } from '../lib/api'
@@ -68,10 +67,9 @@ export function Live() {
         </Link>
       }
     >
-      <div className="mb-4">
+      <div className="mb-6">
         <PromptBar cameras={list} />
       </div>
-      <LibraryStrip />
       {cams.data && !list.length ? (
         <Card>
           <Empty icon={<CameraIcon className="size-8" />} title="No cameras yet" action={<Link to="/cameras?add=1"><Button variant="primary">Add a camera</Button></Link>}>

@@ -330,8 +330,7 @@ class WatchRuntime:
             "cond": self.cond,
             "phase": self.machine.phase,
             "threshold": round(self.model.threshold if self.model else self.head.threshold, 3),
-            "head_mode": ("prebuilt" if (getattr(self.model, "meta", None) or {}).get("library") else "finetuned")
-                         if self.model else self.head.mode,
+            "head_mode": "trained" if self.model else self.head.mode,
             "paused": self.paused,
             "tracks": [
                 {"id": t.id, "label": t.label, "box": [round(v, 4) for v in t.box],

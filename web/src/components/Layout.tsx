@@ -1,4 +1,4 @@
-import { BarChart3, Bell, Brain, Camera, Eye, LayoutGrid, Settings, X, FlaskConical, Boxes } from 'lucide-react'
+import { BarChart3, Bell, Brain, Camera, Eye, LayoutGrid, Settings, X, FlaskConical } from 'lucide-react'
 import { useAuth, signOut } from '../lib/auth'
 import { BetaPill } from '../pages/Welcome'
 import { FeedbackButton } from './Feedback'
@@ -15,7 +15,6 @@ const NAV = [
   { to: '/metrics', label: 'Metrics', icon: BarChart3 },
   { to: '/events', label: 'Inbox', icon: Bell },
   { to: '/cameras', label: 'Cameras', icon: Camera },
-  { to: '/models', label: 'Models', icon: Boxes },
   { to: '/lab', label: 'Lab', icon: FlaskConical },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]

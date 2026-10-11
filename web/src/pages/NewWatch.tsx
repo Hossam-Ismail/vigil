@@ -1,25 +1,16 @@
 import { AlertTriangle, ArrowLeft, Check, Crosshair, Eye, Maximize, ShieldAlert, Sparkles, Wand2 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { CameraView } from '../components/CameraView'
 import { Page } from '../components/Layout'
 import { SampleThumb } from '../components/SampleThumb'
-import { Button, Card, cx, KindBadge, Spinner } from '../components/ui'
+import { Button, Card, cx, Spinner } from '../components/ui'
 import { ZoneEditor } from '../components/ZoneEditor'
 import { WatchPlan } from '../components/WatchPlan'
 import { api, type ApiError, type Camera, type Health, type Metrics, type Watch, type PolicyRefusal, type WatchSpec, type DatasetInfo } from '../lib/api'
 import { pct } from '../lib/format'
 import { useFetch, useNow } from '../lib/hooks'
 import { clearBuild, useLive } from '../lib/live'
-
-const ZONE_METHOD: Record<string, string> = {
-  set_of_mark: 'I marked candidate regions and picked the one that matches your description.',
-  vlm_box: 'I located the region directly in the image.',
-  siglip_rank: 'I ranked candidate regions by how well they match your description.',
-  single_candidate: 'I found one region that matches.',
-  full_frame: 'Watching the whole frame.',
-  error: 'I could not locate the region automatically.',
-}
 
 const CAMERA_STAGES = [
   { key: 'collect', label: 'Collect frames', hint: 'History + a short live capture' },

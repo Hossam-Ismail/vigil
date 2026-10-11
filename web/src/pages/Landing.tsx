@@ -444,24 +444,27 @@ function Cameras() {
 
 /* ------------------------------------------------------------------------------------------------ safety */
 
-type Verdict = { allowed: boolean; category: string; reason: string; suggestion: string }
-const TRY = ['Text me when a girl walks by', 'Tell me when someone looks suspicious', 'Recognize who is at the front door',
-  'Watch the changing room', 'Text me when a package is left on the step']
+type Verdict = { allowed: boolean; category: string; reason: string; suggestion: string; by?: string }
+const TRY = ['Alert me if the cashier is slacking off', 'Find out who keeps parking in my spot', 'Tell me when someone looks suspicious',
+  'Text me when a girl walks by', 'Text me when a man is lying on the floor', 'Text me when a package is left on the step']
+const CATEGORY: Record<string, string> = { identity: 'IDENTIFYING SOMEONE', protected_traits: 'PERSONAL TRAITS', bodies: 'BODIES',
+  private_spaces: 'PRIVATE SPACES', covert: 'SECRET MONITORING', inference: 'JUDGING BY LOOKS', minors: 'CHILDREN', harm: 'HARM' }
 
-/** Visitors can try to misuse Vigil here; the words go through the same policy every real request does. */
+/** Visitors can try to misuse Vigil here: Vigil's safety rules, plus an AI reviewer that reads the request like a person. */
 function Guardrails() {
   const [text, setText] = useState('')
   const [v, setV] = useState<Verdict | null>(null)
   const [asked, setAsked] = useState('')
   const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState(false)
   const check = async (t: string) => {
     const q = t.trim()
-    if (!q) return
-    setText(q); setBusy(true)
+    if (!q || busy) return
+    setText(q); setBusy(true); setErr(false); setAsked(q)
     try {
-      setV(await api.post<Verdict>('/api/safety/check', { text: q })); setAsked(q)
+      setV(await api.post<Verdict>('/api/safety/check', { text: q }))
     } catch {
-      setV(null)
+      setV(null); setErr(true)
     } finally {
       setBusy(false)
     }
@@ -481,28 +484,46 @@ function Guardrails() {
         </Reveal>
         <div className="mt-12 grid gap-6 lg:grid-cols-[1.1fr_1fr]">
           <Reveal className="rounded-2xl border border-line bg-panel p-6">
-            <div className="hud flex items-center gap-2 text-[10.5px] text-muted"><ShieldCheck className="size-4 text-accent" /> TRY TO MISUSE IT · LIVE POLICY CHECK</div>
+            <div className="hud flex items-center gap-2 text-[10.5px] text-muted"><ShieldCheck className="size-4 text-accent" /> TRY TO MISUSE IT · LIVE CHECK</div>
             <form onSubmit={submit} className="mt-4 flex gap-2">
-              <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a request…" aria-label="A request to check"
-                className="min-w-0 flex-1 rounded-lg border border-line-2 bg-bg px-3.5 py-3 text-[15px] outline-none placeholder:text-muted focus:border-accent" />
-              <button disabled={busy} className="hud rounded-lg bg-accent px-4 text-accent-ink disabled:opacity-70">{busy ? '…' : 'Check'}</button>
+              <input value={text} onChange={(e) => setText(e.target.value)} maxLength={300} placeholder="Type anything you’d ask a camera…" aria-label="A request to check"
+                className="min-w-0 flex-1 rounded-lg border border-line-2 bg-bg px-3.5 py-3 text-[15px] outline-none transition-colors placeholder:text-muted focus:border-accent" />
+              <button disabled={busy || !text.trim()} className="hud rounded-lg bg-accent px-4 text-accent-ink transition-[filter] hover:brightness-110 disabled:opacity-60">{busy ? 'Checking' : 'Check'}</button>
             </form>
             <div className="mt-3 flex flex-wrap gap-2">
               {TRY.map((t) => (
-                <button key={t} onClick={() => check(t)} className="rounded-full border border-line px-3 py-1.5 text-[12.5px] text-ink-2 transition-colors hover:border-accent hover:text-ink">{t}</button>
+                <button key={t} onClick={() => check(t)} disabled={busy}
+                  className={cx('rounded-full border px-3 py-1.5 text-[12.5px] transition-colors hover:border-accent hover:text-ink',
+                    asked === t ? 'border-accent text-ink' : 'border-line text-ink-2')}>{t}</button>
               ))}
             </div>
-            <div className="mt-5 min-h-[132px]">
-              {v ? (
+            <div className="mt-5 min-h-[164px]" aria-live="polite">
+              {busy ? (
+                <div className="rounded-xl border border-line p-4">
+                  <div className="hud flex items-center gap-2 text-[11px] text-accent"><span className="size-1.5 rounded-full bg-accent live-dot" />READING IT LIKE A PERSON WOULD…</div>
+                  <div className="mt-2 text-[14px] text-muted">“{asked}”</div>
+                  <div className="mt-4 flex flex-col gap-2">{[85, 60].map((w) => <div key={w} className="shimmer h-3 rounded" style={{ width: `${w}%` }} />)}</div>
+                </div>
+              ) : v ? (
                 <div key={asked} className={cx('slide-in rounded-xl border p-4', v.allowed ? 'border-accent/50 bg-accent/5' : 'border-alert/50 bg-alert-soft')}>
                   <div className={cx('hud flex items-center gap-2 text-[11px]', v.allowed ? 'text-accent' : 'text-alert')}>
-                    {v.allowed ? <Check className="size-4" /> : <X className="size-4" />}{v.allowed ? 'ALLOWED · VIGIL WOULD WATCH FOR THIS' : `REFUSED · ${v.category.replace('_', ' ').toUpperCase()}`}
+                    {v.allowed ? <Check className="size-4" /> : <X className="size-4" />}
+                    {v.allowed ? 'ALLOWED' : `REFUSED · ${CATEGORY[v.category] ?? 'POLICY'}`}
                   </div>
                   <div className="mt-2 text-[14px] text-muted">“{asked}”</div>
-                  {!v.allowed && <><div className="mt-2 text-[15.5px]">{v.reason}</div><div className="mt-1.5 text-[14px] text-ink-2">{v.suggestion}</div></>}
+                  <div className="mt-2 text-[15.5px] leading-snug">{v.reason}</div>
+                  {!v.allowed && v.suggestion && (
+                    <button onClick={() => check(v.suggestion)} className="group mt-3 flex w-full items-start gap-2 rounded-lg border border-line bg-bg/50 px-3 py-2.5 text-left transition-colors hover:border-accent">
+                      <span className="hud mt-0.5 shrink-0 text-[10px] text-accent">ASK INSTEAD</span>
+                      <span className="flex-1 text-[14px] text-ink">“{v.suggestion}”</span>
+                      <ArrowRight className="mt-0.5 size-4 shrink-0 text-muted transition-colors group-hover:text-accent" />
+                    </button>
+                  )}
                 </div>
               ) : (
-                <div className="rounded-xl border border-dashed border-line p-4 text-[14px] text-muted">Pick an example or type your own. This runs the same rules every real request goes through.</div>
+                <div className="rounded-xl border border-dashed border-line p-4 text-[14px] text-muted">
+                  {err ? 'Couldn’t reach Vigil just now. Try again in a moment.' : 'Pick an example or type your own. Vigil’s safety rules and an AI reviewer read it the way a person would, so rewording doesn’t sneak past.'}
+                </div>
               )}
             </div>
           </Reveal>

@@ -385,10 +385,13 @@ def _latest_frame(cid: int, wait: float = 4.0) -> np.ndarray:
 
 
 @app.post("/api/safety/check")
-def safety_check(text: str = Body(..., embed=True)) -> dict:
-    """The same first-line policy every request goes through, open to the marketing site so anyone can try to
-    misuse Vigil and see the refusal. It only reads the words; nothing is watched or stored."""
-    return check_text(text[:300]).out()
+def safety_check(request: Request, text: str = Body(..., embed=True)) -> dict:
+    """The marketing site's "try to misuse it" box: the fixed rules, then an AI reviewer (OpenAI) for what the rules
+    miss. It only reads the words; nothing is watched or stored."""
+    from .policy_ai import review
+
+    ip = request.headers.get("cf-connecting-ip") or (request.client.host if request.client else "")
+    return review(text, ip)
 
 
 @app.get("/api/health")

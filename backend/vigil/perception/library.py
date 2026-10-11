@@ -276,6 +276,8 @@ class Runner:
         names = r.names
         dets = sorted(((box, names[int(cls)], float(conf)) for box, cls, conf in
                        zip(r.boxes.xyxy.tolist(), r.boxes.cls.tolist(), r.boxes.conf.tolist())), key=lambda d: -d[2])
+        if self.m.id == "hardhat" and "NO-Hardhat" in self.yes:
+            return self._bare_heads(frame, dets)
         kept: list = []
         for box, label, conf in dets:  # one label per object: the most confident one wins
             if all(_iou(box, k[0]) < 0.6 for k in kept):
@@ -287,6 +289,31 @@ class Runner:
             if self.m.id == "fall" and label == "fallen" and (box[2] - box[0]) < 0.8 * (box[3] - box[1]):
                 continue  # someone lying down is wider than tall; an upright box called "fallen" is a misread
             out.append(Hit((box[0] / w, box[1] / h, box[2] / w, box[3] / h), conf))
+        return out
+
+    def _bare_heads(self, frame: np.ndarray, dets: list) -> list:
+        """Anyone not wearing a hard hat. The helmet model finds helmets well but rarely calls a bare head, so every
+        person the person detector finds is checked for a helmet sitting on their head."""
+        from ..learning.finetune import Hit
+        from .detector import get_coco
+
+        h, w = frame.shape[:2]
+        helmets = [box for box, label, conf in dets if label == "Hardhat"]
+        out = []
+        for p in get_coco().detect(frame, {"person": ["person"]}, threshold=0.5):
+            x1, y1, x2, y2 = p.box[0] * w, p.box[1] * h, p.box[2] * w, p.box[3] * h
+            bw, bh = x2 - x1, y2 - y1
+            if bh < 40:  # too small to judge a head
+                continue
+            head = (x1 + 0.1 * bw, y1 - 0.08 * bh, x2 - 0.1 * bw, y1 + 0.3 * bh)
+            covered = False
+            for b in helmets:
+                iw, ih = min(head[2], b[2]) - max(head[0], b[0]), min(head[3], b[3]) - max(head[1], b[1])
+                if iw > 0 and ih > 0 and iw * ih / max(1.0, (b[2] - b[0]) * (b[3] - b[1])) > 0.4:
+                    covered = True
+                    break
+            if not covered:
+                out.append(Hit(p.box, p.conf))
         return out
 
     def _probs(self, model, inputs) -> dict[str, float]:

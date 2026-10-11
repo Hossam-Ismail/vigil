@@ -1,6 +1,7 @@
 import { Camera as CameraIcon, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { CameraView } from '../components/CameraView'
+import { ExamplesPanel } from '../components/ExamplesPanel'
 import { Page } from '../components/Layout'
 import { PromptBar } from '../components/PromptBar'
 import { Button, Card, cx, Empty } from '../components/ui'
@@ -25,8 +26,9 @@ function CameraTile({ cam, watches }: { cam: Camera; watches: Watch[] }) {
   const aspect = cam.width && cam.height ? cam.width / cam.height : 16 / 9
   return (
     <Card className="overflow-hidden">
-      <Link to={`/cameras/${cam.id}`} className="block">
+      <Link to={`/cameras/${cam.id}`} className="group relative block" title="Open this camera">
         <CameraView cameraId={cam.id} aspect={aspect} watches={watches} rounded={false} fps={4} />
+        <span className="hud absolute right-3 top-3 rounded bg-black/70 px-2 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">OPEN CAMERA →</span>
       </Link>
       <div className="p-3">
         <div className="flex items-center gap-2">
@@ -40,7 +42,7 @@ function CameraTile({ cam, watches }: { cam: Camera; watches: Watch[] }) {
           {watches.map((w) => (
             <WatchChip key={w.id} w={w} />
           ))}
-          {!watches.length && <div className="rounded-lg border border-dashed border-line px-3 py-2.5 text-[12.5px] text-muted">No watches yet. Describe one above.</div>}
+          {!watches.length && <div className="rounded-lg border border-dashed border-line px-3 py-2.5 text-[12.5px] text-muted">No watches yet. Build an example or describe one above.</div>}
         </div>
       </div>
     </Card>
@@ -67,7 +69,9 @@ export function Live() {
         </Link>
       }
     >
+      <ExamplesPanel />
       <div className="mb-6">
+        <div className="mb-2 text-[13px] text-ink-2">Or describe your own, on any of your cameras</div>
         <PromptBar cameras={list} />
       </div>
       {cams.data && !list.length ? (

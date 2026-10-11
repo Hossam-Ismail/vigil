@@ -42,6 +42,7 @@ export function WatchChip({ w }: { w: Watch }) {
       <div className="flex items-center gap-2">
         {alerting ? <span className="size-1.5 rounded-full bg-alert pulse-alert" /> : <span className={cx('size-1.5 rounded-full', w.status === 'active' ? (tone === 'warn' ? 'bg-warn' : 'bg-ok') : 'bg-muted')} />}
         <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{w.name}</span>
+        <span className="hud hidden text-[9.5px] text-muted group-hover:inline">OPEN →</span>
         <KindBadge kind={w.spec.kind} />
         <span className="text-[12.5px] w-14 text-right">
           {w.status === 'active' ? <RuntimeValue w={w} rt={rt} /> : <span className="text-muted capitalize">{w.status}</span>}

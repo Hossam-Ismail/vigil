@@ -208,6 +208,30 @@ def auth_login(email: str = Body(...), password: str = Body(...)) -> JSONRespons
     return _with_session(_auth_call(S().accounts.sign_in, email, password))
 
 
+@app.post("/api/auth/demo")
+def auth_demo() -> JSONResponse:
+    """"Try the demo": the demo account, always fresh. Its cameras, watches and alerts are cleared so every visitor
+    starts on the same walkthrough instead of whatever the last visitor left behind."""
+    from .accounts import DEMO_LOGIN
+
+    if ":" not in DEMO_LOGIN:
+        raise HTTPException(404, "the demo is turned off")
+    name, pw = DEMO_LOGIN.split(":", 1)
+    user = _auth_call(S().accounts.sign_in, name, pw)
+    for w in S().db.watches():
+        b = S().engine.builds.get(w["id"])
+        if b:
+            b.cancelled.set()
+        S().engine.deactivate(w["id"])
+        S().db.delete_watch(w["id"])
+    for c in S().db.cameras():
+        S().engine.stop_analyzer(c["id"])
+        S().hub.stop(c["id"])
+        S().db.delete_camera(c["id"])
+    S().db.execute("DELETE FROM events")
+    return _with_session(user)
+
+
 @app.post("/api/auth/logout")
 def auth_logout(request: Request) -> JSONResponse:
     S().accounts.end_session(request.cookies.get(COOKIE))
@@ -715,6 +739,32 @@ def add_camera(body: CameraIn) -> dict:
     return _camera_out(cam)
 
 
+@app.get("/api/examples")
+def list_examples() -> list[dict]:
+    """The dashboard's ready-made examples, with the camera already set up for each (if any)."""
+    from . import examples
+
+    by_url = {c["url"]: c["id"] for c in S().db.cameras()}
+    return [examples.public(e, by_url.get(examples.path(e))) for e in examples.EXAMPLES]
+
+
+@app.post("/api/examples/{eid}/camera")
+def example_camera(eid: str) -> dict:
+    """Set up the example's footage as a camera (or reuse it) so its watch can be built on it."""
+    from . import examples
+
+    e = examples.BY_ID.get(eid)
+    if not e:
+        raise HTTPException(404, "no such example")
+    url = examples.path(e)
+    for c in S().db.cameras():
+        if c["url"] == url:
+            return _camera_out(c)
+    cam = S().db.add_camera(e["camera"], "file", url, True)
+    S().hub.start(cam)
+    return _camera_out(cam)
+
+
 @app.patch("/api/cameras/{cid}")
 def patch_camera(cid: int, body: CameraPatch) -> dict:
     _cam_or_404(cid)
@@ -1080,6 +1130,9 @@ EACH_NEW = re.compile(r"\b(each|every) (new )?(person|one|arrival|car|truck|visi
                       r"\b(comes|walks|steps|drives) in\b|\benters\b|\barrives\b", re.I)
 
 
+WHERE_ONLY = re.compile(r"^\s*(?:is|are)\s+(?:this|the|these|that)\s+[\w-]+(?:\s+[\w-]+)?\s+(?:in|on|at|inside|near|within|by)\s+(?:the|this|a)\s+[\w\s-]+\??\s*$", re.I)
+
+
 def _live_defaults(spec: WatchSpec, prompt: str) -> None:
     """Make a fresh watch respond the way people expect when they try it live.
 
@@ -1098,6 +1151,10 @@ def _live_defaults(spec: WatchSpec, prompt: str) -> None:
         spec.cooldown_s = min(spec.cooldown_s, 20.0)
     if spec.trigger == "per_object" and spec.crossing == "none" and not EACH_NEW.search(prompt):
         spec.trigger = "rising"
+    if spec.target_question and WHERE_ONLY.search(spec.target_question):
+        # "is this person on the plaza?" only restates where the camera points; asking it of every person just
+        # loses people the image check is unsure about
+        spec.target_question = ""
 
 
 def _text_by_default(spec: WatchSpec) -> None:
@@ -1133,6 +1190,8 @@ def draft_watch(body: WatchDraftIn) -> dict:
                          str(pol.get("suggestion") or "Describe an object, event or condition instead.")))
     spec = _sanitize(raw)
     _live_defaults(spec, prompt)
+    if cam["kind"] == "file":  # a recorded clip loops, so the same moment comes round every few seconds
+        spec.cooldown_s = max(spec.cooldown_s, 180.0)
     _text_by_default(spec)
     _enforce(check_spec(spec.model_dump()))
     t = time.time()

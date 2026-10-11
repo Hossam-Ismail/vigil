@@ -26,6 +26,9 @@ def choose(spec: WatchSpec) -> dict:
         from ..perception.library import BY_ID
 
         m = BY_ID[spec.library["id"]]
+        if m.id == "hardhat" and "NO-Hardhat" in (spec.library.get("yes") or []):
+            return {"state": "existing", "models": [COCO, {"name": m.repo.split("/")[-1], "url": m.card()["url"], "trained_on": "public data"}],
+                    "how": "Finds every person, then checks whether a hard hat is on each head."}
         what = spec.positive_label or ", ".join(spec.library.get("yes") or [])
         how = (f"Watches every 2-second clip for {what}." if m.kind == "video" else
                f"Looks for {what} in every frame.")

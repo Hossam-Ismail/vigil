@@ -90,15 +90,15 @@ function HeroWatch() {
 }
 
 const PROMPTS = [
-  'Text me when a car pulls out of a spot so I can send the next van in', 'Tell the lead when someone has no hard hat',
-  'Text me if anyone smokes by the service door', 'How many people are on the plaza?', 'Text me when someone does push-ups',
+  'Text the shift lead if anyone on site isn’t wearing a hard hat', 'Text receiving when a truck is in the yard',
+  'How many people are on the plaza?', 'Text me when someone does push-ups',
   'Tell receiving when a truck backs into dock 2', 'Text me when a package is left on the step', 'Tell me if anything blocks the fire exit',
 ]
 
 /* ------------------------------------------------------------------------------------------------ speed */
 
 const TIMELINE: [string, string, string][] = [
-  ['0 s', 'You type it', '“Text me if anyone smokes by the service door.”'],
+  ['0 s', 'You type it', '“Text the shift lead if anyone on site isn’t wearing a hard hat.”'],
   ['< 20 s', 'It is watching', 'Vigil reads the request and picks a model that already knows the scene. Nothing to train.'],
   ['41 ms', 'Every frame, checked', 'The object detector looks at each frame in 41 ms on a laptop; actions are judged on 2-second clips in 0.15 s.'],
   ['~2 s', 'Sure, not twitchy', 'It needs 3 agreeing checks out of 5 before it believes it, so one odd frame never texts you.'],
@@ -166,28 +166,20 @@ type Example = {
   prompt: string; model: string; then: string; camHint?: string
 }
 
-/** Each one is real footage; the brackets and labels in the parking clip are Vigil's own output. */
+/** Each one is real footage, and each prompt was checked against the models that run it. */
 const EXAMPLES: Example[] = [
-  { cat: 'Parking', title: 'Send the next van the moment a spot opens.', camera: 'Aerial lot camera', source: 'Real video · 2×',
-    video: '/landing/parking_vigil.mp4', img: '/landing/parking_vigil_poster.jpg', camHint: 'parking',
-    prompt: 'Text me the moment a car pulls out of a spot, so I can send the next delivery van in.',
-    model: 'A yes/no check on every space, twice a second', then: 'iMessage, or update the “spaces free” sign by webhook' },
-  { cat: 'Safety', title: 'Catch smoking by the service door.', camera: 'Service entrance', source: 'Real video',
-    video: '/landing/smoking.mp4', img: '/landing/smoking_poster.jpg', camHint: 'service',
-    prompt: 'Text me if anyone smokes by the service door, with the photo.',
-    model: 'Action recognition on 2-second clips (400 human actions)', then: 'iMessage with the photo, faces blurred' },
-  { cat: 'Logistics & yards', title: 'Log every truck that pulls in.', camera: 'Yard drone', source: 'Real video',
-    video: '/landing/yard.mp4', img: '/landing/yard.jpg',
-    prompt: 'When a truck pulls into the yard, text receiving and log the arrival in HubSpot.',
-    model: 'People & vehicle detector, 41 ms a frame', then: 'iMessage to receiving + a HubSpot task' },
+  { cat: 'Construction safety', title: 'Hard hats vs no hard hats.', camera: 'Construction site', source: 'Real video',
+    video: '/landing/hardhat.mp4', img: '/landing/hardhat_poster.jpg', camHint: 'hardhats',
+    prompt: 'Text the shift lead if anyone on site isn’t wearing a hard hat.',
+    model: 'Finds every person, then checks for a hard hat on each head', then: 'iMessage the shift lead with the photo' },
+  { cat: 'Logistics & yards', title: 'Log every truck that pulls in.', camera: 'Lumber yard', source: 'Real video',
+    video: '/landing/yard.mp4', img: '/landing/yard.jpg', camHint: 'trucks',
+    prompt: 'Text receiving when a truck is in the yard.',
+    model: 'People & vehicle detector, 41 ms a frame', then: 'iMessage to receiving, or a HubSpot task' },
   { cat: 'Foot traffic', title: 'Know when a crowd forms.', camera: 'Campus plaza', source: 'Real video',
-    video: '/landing/plaza.mp4', img: '/landing/plaza_poster.jpg',
-    prompt: 'Count the people on the plaza all day, and text me if more than 10 gather.',
-    model: 'People counter, kept as a metric all day', then: 'a live chart, plus an iMessage past 10' },
-  { cat: 'Construction', title: 'Check hard hats before work begins.', camera: 'Pump station CCTV', source: 'Real frame',
-    img: '/landing/hardhat.jpg',
-    prompt: 'Text the shift lead if anyone at the pump isn’t wearing a hard hat.',
-    model: 'A hard-hat detector, then a check on each head', then: 'iMessage the shift lead with the photo' },
+    video: '/landing/plaza.mp4', img: '/landing/plaza_poster.jpg', camHint: 'crowd',
+    prompt: 'Text me when more than 5 people are on the plaza, and keep a count all day.',
+    model: 'People counter, kept as a metric all day', then: 'a live chart, plus an iMessage past 5' },
 ]
 
 type Step = { label: string; detail?: string; bad?: boolean }
@@ -263,7 +255,7 @@ function BuildDemo({ onOpen }: { onOpen: (prompt: string, camHint?: string) => v
                 <span className={cx('hud slide-in flex items-center gap-2 rounded-md px-3 py-1.5 text-[11px]',
                   phase === 'refused' ? 'bg-alert text-white' : phase === 'built' ? 'bg-accent text-accent-ink' : 'bg-black/75 text-accent')}>
                   {phase === 'building' && <span className="size-1.5 rounded-full bg-accent live-dot" />}
-                  {phase === 'refused' ? 'REFUSED · NOTHING IS WATCHED' : phase === 'built' ? 'WATCH READY · OPEN IT ON A LIVE CAMERA' : 'BUILDING THE WATCH…'}
+                  {phase === 'refused' ? 'REFUSED · NOTHING IS WATCHED' : phase === 'built' ? 'READY · BUILD IT ON A LIVE CAMERA' : 'BUILDING THE WATCH…'}
                 </span>
               </div>
             )}
@@ -295,16 +287,16 @@ function BuildDemo({ onOpen }: { onOpen: (prompt: string, camHint?: string) => v
           </ol>
           {phase === 'refused' && <div className="slide-in mt-3 text-[13px] text-ink-2">We put a safer version in the box. Build that instead.</div>}
           {phase === 'built' && (
-            <button onClick={() => onOpen(prompt.trim(), preset ? ex.camHint : undefined)}
+            <button onClick={() => onOpen(prompt.trim(), ex.camHint)}
               className="slide-in hud mt-4 flex min-h-[50px] items-center justify-between border border-accent px-5 text-accent transition-colors hover:bg-accent hover:text-accent-ink">
-              Open it on a live camera <ArrowRight className="size-4" />
+              Build it in the live app <ArrowRight className="size-4" />
             </button>
           )}
         </div>
       </div>
 
       {/* the examples */}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" role="tablist" aria-label="Examples">
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3" role="tablist" aria-label="Examples">
         {EXAMPLES.map((x, k) => (
           <button key={x.cat} role="tab" aria-selected={k === i} onClick={() => { pick(k); setEngaged(false) }} className="group text-left">
             <div className={cx('relative aspect-[16/9] overflow-hidden rounded-lg border transition-colors', k === i ? 'border-accent' : 'border-line group-hover:border-line-2')}>
@@ -352,36 +344,6 @@ function UseCases({ onOpen }: { onOpen: (prompt: string, camHint?: string) => vo
           ))}
         </ul>
       </Reveal>
-    </section>
-  )
-}
-
-/* ------------------------------------------------------------------------------------------------ parking spotlight */
-
-function Spotlight() {
-  return (
-    <section className="scroll-mt-20 border-y border-line bg-bg-2">
-      <div className={cx(W, 'grid items-center gap-12 py-24 lg:grid-cols-[1.35fr_1fr]')}>
-        <Reveal className="relative overflow-hidden rounded-2xl border border-line">
-          <LoopVideo src="/landing/parking_vigil.mp4" poster="/landing/parking_vigil_poster.jpg" label="Real aerial parking lot video: Vigil watches 161 spaces and texts when one opens" className="block w-full" />
-          <span className="hud absolute left-3 top-3 rounded bg-black/65 px-2 py-1 text-[10px] text-white/80">REAL VIDEO · 2× · THE MODEL NEVER SAW THIS LOT</span>
-        </Reveal>
-        <div>
-          <Eyebrow>SPOTLIGHT · PARKING</Eyebrow>
-          <Reveal delay={60}><h3 className="mt-4 text-[34px] font-semibold leading-tight md:text-[42px]">Know the moment a spot opens.</h3></Reveal>
-          <Reveal delay={120}><p className="mt-4 text-[16px] leading-relaxed text-ink-2">One sentence, applied to every space in the lot. Each space is watched on its own, and a text only goes out once an opening holds.</p></Reveal>
-          <div className="mt-8 grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-line bg-line">
-            {[['161', 'spaces watched'], ['10', 'texts sent'], ['9', 'of them right']].map(([n, t]) => (
-              <div key={t} className="bg-panel p-4"><div className="num text-[30px] text-accent"><CountUp value={n} /></div><div className="mt-1 text-[12.5px] text-muted">{t}</div></div>
-            ))}
-          </div>
-          <Reveal delay={180}><p className="mt-4 text-[13.5px] leading-relaxed text-muted">The one miss: a white van whose roof read as an empty bay. Replying NO to that text is exactly how the watch learns.</p></Reveal>
-          <Reveal delay={220} className="mt-6 flex items-baseline gap-3 rounded-xl border border-accent/40 bg-accent/5 p-5">
-            <span className="num text-[38px] text-accent"><CountUp value="99.4%" /></span>
-            <span className="text-[14px] text-ink-2">of 4,000 spaces called right on a second public camera set, on days the model had never seen <span className="hud text-[10px] text-muted">· PKLOT, CC BY 4.0</span></span>
-          </Reveal>
-        </div>
-      </div>
     </section>
   )
 }
@@ -794,7 +756,7 @@ function Faq() {
 
 function HowSteps() {
   const [ref, seen] = useInView<HTMLDivElement>()
-  const [typed, done] = useTyped('Text me if anyone smokes by the service door', seen, 34)
+  const [typed, done] = useTyped('Text the shift lead if anyone on site isn’t wearing a hard hat', seen, 34)
   return (
     <section id="how" className={cx(W, 'scroll-mt-20 py-24')}>
       <Eyebrow>HOW IT WORKS</Eyebrow>
@@ -808,7 +770,7 @@ function HowSteps() {
         <div className="bg-panel p-7">
           <div className="num text-[13px] text-accent">02 · VISION · IT PICKS THE MODEL</div>
           <div className="mt-4 grid grid-cols-2 gap-2 text-[12.5px]">
-            {[['People & objects', false], ['Any named object', false], ['Yes/no about a scene', false], ['400 human actions', true]].map(([t, on], i) => (
+            {[['People & objects', true], ['Hard hats & PPE', true], ['Yes/no about a scene', false], ['400 human actions', false]].map(([t, on], i) => (
               <div key={t as string} className={cx('rounded-md border px-2.5 py-2 transition-all duration-500', on && done ? 'border-accent bg-accent/10 text-ink' : 'border-line text-muted')}
                 style={{ transitionDelay: `${i * 80}ms` }}>{t as string}</div>
             ))}
@@ -819,8 +781,8 @@ function HowSteps() {
           <div className="num text-[13px] text-accent">03 · ACTION · IT FOLLOWS UP</div>
           <div className={cx('mt-4 rounded-xl border border-white/10 bg-[#1c1c1e] p-3 transition-all duration-700', done ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0')} style={{ transitionDelay: '600ms' }}>
             <div className="flex gap-2.5">
-              <img src="/landing/smoking_poster.jpg" alt="" className="size-11 shrink-0 rounded-md object-cover" />
-              <div className="text-[13px] leading-snug text-white"><b>Vigil</b><br />Someone is smoking at the service entrance.</div>
+              <img src="/landing/hardhat_poster.jpg" alt="" className="size-11 shrink-0 rounded-md object-cover" />
+              <div className="text-[13px] leading-snug text-white"><b>Vigil</b><br />Someone on site isn’t wearing a hard hat.</div>
             </div>
           </div>
           <p className="mt-4 text-[14.5px] text-muted">A second AI double-checks, then the text, ticket or webhook goes out. Every YES or NO makes it sharper.</p>
@@ -832,30 +794,30 @@ function HowSteps() {
 
 /** What a signed-out visitor sees first. */
 export function Landing({ onSignIn }: { onSignIn: () => void }) {
-  const { me, setMe } = useAuth()
+  const { setMe } = useAuth()
   const [busy, setBusy] = useState(false)
   const nav = useNavigate()
   const [demoErr, setDemoErr] = useState(false)
-  /** Into the live app as the demo account (already signed in: straight to the dashboard). */
+  /** "Try the demo": a fresh demo account every time, landing on the hard-hat walkthrough. */
+  const fresh = async () => setMe((await api.post<{ user: Me }>('/api/auth/demo')).user)
   const demo = async () => {
     setBusy(true); setDemoErr(false)
     try {
-      if (!me) setMe((await api.post<{ user: Me }>('/api/auth/login', { email: 'test', password: '123' })).user)
-      nav('/')
+      await fresh()
+      nav('/?example=hardhats')
     } catch {
       setDemoErr(true)
     } finally {
       setBusy(false)
     }
   }
-  const openInApp = async (prompt: string, camHint?: string) => {
-    const q = new URLSearchParams({ prompt, ...(camHint ? { cam: camHint } : {}) })
-    if (!me) {
-      try {
-        setMe((await api.post<{ user: Me }>('/api/auth/login', { email: 'test', password: '123' })).user)
-      } catch {
-        return
-      }
+  /** Hand a demo over to the dashboard's walkthrough, with that example and the prompt already chosen. */
+  const openInApp = async (prompt: string, example?: string) => {
+    const q = new URLSearchParams({ example: example ?? 'hardhats', ep: prompt })
+    try {
+      await fresh()
+    } catch {
+      return
     }
     nav(`/?${q.toString()}`)
   }
@@ -933,7 +895,6 @@ export function Landing({ onSignIn }: { onSignIn: () => void }) {
       <HowSteps />
       <Speed />
       <UseCases onOpen={openInApp} />
-      <Spotlight />
       <IMessage />
       <FollowUp />
       <Cameras />

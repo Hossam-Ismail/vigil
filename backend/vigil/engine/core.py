@@ -85,7 +85,8 @@ class CameraAnalyzer:
             shot = frame
             try:
                 if m.kind == "detector":
-                    label = rt.spec.locate_noun or (rt.spec.targets[0] if rt.spec.targets else rt.name)
+                    # name the box after what it means ("no hard hat"), not the place it was found
+                    label = (rt.spec.positive_label or rt.spec.locate_noun or (rt.spec.targets[0] if rt.spec.targets else rt.name))[:40]
                     hits = [h for h in m.detect(frame) if h.conf >= m.threshold]
                     found = [Detection(label, h.conf, h.box, "watch") for h in hits]
                     shown += found

@@ -1,47 +1,28 @@
-import { ArrowLeft, Pause, Play, RefreshCw, Save, Settings2, Trash2, Wand2 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft, Pause, Play, RefreshCw, Save, Settings2, Trash2, Wand2, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { CameraView } from '../components/CameraView'
 import { EventRow } from '../components/EventRow'
 import { Page } from '../components/Layout'
 import { SampleThumb } from '../components/SampleThumb'
-import { Sparkline } from '../components/Sparkline'
 import { Button, Card, cx, Empty, KindBadge, SectionTitle, StatusPill } from '../components/ui'
 import { liveRuntime, runtimeTone } from '../components/WatchChip'
 import { ZoneEditor } from '../components/ZoneEditor'
-import { api, type Camera, type MetricOut, type Sample, type VEvent, type Watch, type WatchSpec } from '../lib/api'
+import { api, type Camera, type Sample, type VEvent, type Watch, type WatchSpec } from '../lib/api'
 import { dateTime, duration, ORIGIN_LABEL, SOURCE_LABEL, timeAgo } from '../lib/format'
 import { useFetch, useInterval } from '../lib/hooks'
 import { useLive } from '../lib/live'
 import { ModelSummary } from './NewWatch'
 import { PlanEditor } from '../components/PlanEditor'
-import { MetricCard } from './Metrics'
 
 type Filter = 'all' | 'yes' | 'no' | 'review'
 
 function LiveState({ w }: { w: Watch }) {
   const perception = useLive((s) => s.perception[w.camera_id])
   const rt = liveRuntime(w, perception)
-  const [series, setSeries] = useState<[number, number][]>([])
-  const lastTs = useRef(0)
-
-  // seed from the server-side history, then extend from the live stream
-  useEffect(() => {
-    if (w.runtime?.spark) setSeries(w.runtime.spark.map(([t, v]) => [Date.now() / 1000 + t, v]))
-  }, [w.id]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!perception || !rt || perception.ts === lastTs.current) return
-    lastTs.current = perception.ts
-    const v = w.spec.kind === 'state' ? rt.score ?? 0 : rt.count ?? 0
-    setSeries((s) => [...s.filter(([t]) => t > perception.ts - 180), [perception.ts, v]])
-  }, [perception, rt, w.spec.kind])
-
-  const now = Date.now() / 1000
-  const rel = series.map(([t, v]) => [t - now, v] as [number, number])
   const tone = runtimeTone(rt)
   const isState = w.spec.kind === 'state'
   const tripwire = w.spec.kind === 'presence' && w.spec.crossing !== 'none'
-  const maxCount = Math.max(2, w.spec.count_value * 2, ...series.map(([, v]) => v))
   const phaseText =
     w.status !== 'active'
       ? w.status === 'paused' ? 'Paused' : w.status_detail || w.status
@@ -76,13 +57,6 @@ function LiveState({ w }: { w: Watch }) {
               {tripwire ? `alerts on each crossing (${w.spec.crossing})` : `alerts when count ${w.spec.count_op} ${w.spec.count_value}`}
             </div>
           )}
-        </div>
-      </div>
-      <div className="mt-3">
-        <Sparkline points={rel} threshold={isState ? rt?.threshold : w.spec.count_value} max={isState ? 1 : maxCount} window={180} stepped={!isState} />
-        <div className="mt-1 flex justify-between text-[10.5px] text-muted num">
-          <span>3 min ago</span>
-          <span>now</span>
         </div>
       </div>
     </Card>
@@ -121,10 +95,29 @@ function TeachBar({ w, onDone }: { w: Watch; onDone: () => void }) {
   )
 }
 
-function WatchMetric({ id }: { id: number }) {
-  const m = useFetch<MetricOut>(`/api/watches/${id}/metrics?hours=24&bucket=1800`, [id])
-  useInterval(() => m.reload(), 15000)
-  return m.data ? <div className="mb-5"><MetricCard m={m.data} hours={24} bucket={1800} /></div> : null
+
+/** What you're looking at, in three lines; open after building a watch (?new=1), closable, and back on request. */
+function WatchGuide({ w }: { w: Watch }) {
+  const [params, setParams] = useSearchParams()
+  const [open, setOpen] = useState(params.has('new'))
+  const close = () => { setOpen(false); if (params.has('new')) { params.delete('new'); setParams(params, { replace: true }) } }
+  if (!open) {
+    return <button onClick={() => setOpen(true)} className="mb-4 text-[12.5px] text-muted underline-offset-2 hover:text-ink hover:underline">How to read this page</button>
+  }
+  const presence = w.spec.kind !== 'state'
+  return (
+    <div className="slide-in mb-5 rounded-2xl border border-accent/40 bg-accent/5 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="hud flex items-center gap-2 text-[11px] text-accent"><span className="size-1.5 rounded-full bg-accent live-dot" />WATCHING NOW · {w.name}</div>
+        <button onClick={close} className="text-muted hover:text-ink" aria-label="Close"><X className="size-4" /></button>
+      </div>
+      <ol className="mt-3 grid gap-3 text-[14px] md:grid-cols-3">
+        <li><span className="num mr-1.5 text-accent">1</span><b className="font-medium">The video is what Vigil sees.</b> <span className="text-muted">{presence ? 'Boxes mark what it found; red means it matches your request.' : 'The bar on the right shows how sure it is, right now.'}</span></li>
+        <li><span className="num mr-1.5 text-accent">2</span><b className="font-medium">When it happens, you get an alert.</b> <span className="text-muted">It shows up in Alerts below, and as an iMessage if your number is set up.</span></li>
+        <li><span className="num mr-1.5 text-accent">3</span><b className="font-medium">Teach it.</b> <span className="text-muted">Mark an alert right or wrong; that watch learns from it.</span></li>
+      </ol>
+    </div>
+  )
 }
 
 export function WatchDetail() {
@@ -242,7 +235,6 @@ export function WatchDetail() {
         {w.status !== 'building' && w.status_detail && w.status_detail !== 'ready' && <div className="mt-2 text-[12.5px] text-warn">{w.status_detail}</div>}
       </Card>
 
-      {w.spec.metric && <WatchMetric id={w.id} />}
 
       {editing && draft && (
         <Card className="mb-5 p-5 slide-in">
@@ -268,6 +260,7 @@ export function WatchDetail() {
         </Card>
       )}
 
+      <WatchGuide w={w} />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
           <CameraView cameraId={w.camera_id} aspect={aspect} watches={[w]} focusWatchId={w.id} fps={6} />
@@ -276,21 +269,29 @@ export function WatchDetail() {
         <div className="flex flex-col gap-4">
           <LiveState w={w} />
           <Card className="p-4">
-            <SectionTitle
-              right={
-                <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} loading={busy === 'retrain'} onClick={() => act('retrain', () => api.post(`/api/watches/${w.id}/retrain`))}>
-                  Retrain
-                </Button>
-              }
-            >
-              Model · v{w.model_version}
-            </SectionTitle>
-            <ModelSummary m={m} />
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted">
-              {m.sources && Object.entries(m.sources).map(([k, v]) => <span key={k}>{v} from {SOURCE_LABEL[k] ?? k}</span>)}
-              {m.trained_at && <span>trained {timeAgo(m.trained_at)}{m.reason ? ` (${m.reason})` : ''}</span>}
-              {m.train_ms !== undefined && <span className="num">{m.train_ms} ms to train</span>}
+            <SectionTitle>How it decides</SectionTitle>
+            <p className="text-[14px] leading-relaxed text-ink-2">{w.metrics?.dataset?.how ?? w.spec.summary}</p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {(w.metrics?.dataset?.models ?? []).map((md) => (
+                <span key={md.name} className="rounded-md border border-line bg-panel-2 px-2 py-1 text-[12px] text-ink-2">{md.name}</span>
+              ))}
+              <span className="rounded-md border border-line bg-panel-2 px-2 py-1 text-[12px] text-ink-2">a second AI double-checks each alert</span>
             </div>
+            <div className="mt-3 text-[12.5px] text-muted">Ready-made models, nothing to train. Mark alerts right or wrong below and this watch learns from it.</div>
+            <details className="mt-3 text-[12.5px]">
+              <summary className="cursor-pointer text-muted hover:text-ink">Technical details</summary>
+              <div className="mt-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-muted">Model v{w.model_version}</span>
+                  <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} loading={busy === 'retrain'} onClick={() => act('retrain', () => api.post(`/api/watches/${w.id}/retrain`))}>Retrain</Button>
+                </div>
+                <ModelSummary m={m} />
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted">
+                  {m.sources && Object.entries(m.sources).map(([k, v]) => <span key={k}>{v} from {SOURCE_LABEL[k] ?? k}</span>)}
+                  {m.trained_at && <span>trained {timeAgo(m.trained_at)}{m.reason ? ` (${m.reason})` : ''}</span>}
+                </div>
+              </div>
+            </details>
           </Card>
         </div>
       </div>
